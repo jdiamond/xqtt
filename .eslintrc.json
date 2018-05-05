@@ -1,0 +1,12 @@
+{
+  "parser": "babel-eslint",
+  "plugins": ["flowtype"],
+  "extends": ["eslint:recommended", "plugin:flowtype/recommended"],
+  "env": {
+    "es6": true,
+    "browser": true
+  },
+  "rules": {
+    "semi": ["error", "always"]
+  }
+}
