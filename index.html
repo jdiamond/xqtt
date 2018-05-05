@@ -4,16 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="icon" href="data:,">
   <title>wqtt example</title>
 </head>
 <body>
-  <script src="dist/wqtt.js"></script>
-  <script>
-    var client = new wqtt.Client({
-      host: 'localhost',
-      port: 8080
-    });
-    client.connect();
-  </script>
+<script src="dist/wqtt.js"></script>
+<script>
+var client = new wqtt.Client({
+  host: 'localhost',
+  port: 8080,
+  packetsend(buffer) {
+    console.log('sent', buffer);
+  },
+  packetreceive(buffer) {
+    console.log('received', buffer);
+  },
+  connack(packet) {
+    console.log('connack', packet);
+  }
+});
+
+client.connect();
+</script>
 </body>
 </html>
