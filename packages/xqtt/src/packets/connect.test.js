@@ -4,7 +4,7 @@
 
 import { encode } from './index';
 
-describe('packet', () => {
+describe('packets', () => {
   describe('connect', () => {
     describe('encode', () => {
       test('only clientId', () => {
@@ -126,22 +126,22 @@ describe('packet', () => {
           // clientId
           0, // length MSB
           2, // length LSB
-          105, // i
-          100, // d
+          105, // 'i'
+          100, // 'd'
           // username
           0, // length MSB
           4, // length LSB
-          117, // u
-          115, // s
-          101, // e
-          114, // r
+          117, // 'u'
+          115, // 's'
+          101, // 'e'
+          114, // 'r'
           // password
           0, // length MSB
           4, // length LSB
-          112, // p
-          97, // a
-          115, // s
-          115, // s
+          112, // 'p'
+          97, // 'a'
+          115, // 's'
+          115, // 's'
         ]);
       });
     });
