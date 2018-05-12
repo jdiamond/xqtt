@@ -8,23 +8,43 @@
   <title>wqtt example</title>
 </head>
 <body>
+  <div>
+    <button onclick="connect()">connect</button>
+    <button onclick="disconnect()">disconnect</button>
+  </div>
+  <ul id="events">
+  </ul>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js"></script>
 <script src="dist/wqtt.js"></script>
 <script>
-var client = new wqtt.Client({
+const client = new wqtt.Client({
   host: 'localhost',
   port: 8080,
   packetsend(buffer) {
-    console.log('packetsend', buffer);
+    logEvent('packetsend', buffer);
   },
   packetreceive(buffer) {
-    console.log('packetreceive', buffer);
+    logEvent('packetreceive', buffer);
   },
   connack(packet) {
-    console.log('connack', packet);
-  }
+    logEvent('connack', JSON.stringify(packet));
+  },
 });
 
-client.connect();
+function connect() {
+  client.connect();
+}
+
+function disconnect() {
+  client.disconnect();
+}
+
+function logEvent(type, msg) {
+  const li = document.createElement('li');
+  li.textContent = `${type}: ${msg}`;
+  document.all.events.appendChild(li);
+}
 </script>
 </body>
 </html>

@@ -17,17 +17,34 @@ export default class Client extends BaseClient {
     super(options);
   }
 
-  connect() {
-    const url = this.getWebSocketURL();
+  open() {
+    return new Promise((resolve, reject) => {
+      const url = this.getWebSocketURL();
 
-    const { subprotocol } = this.options;
+      const { subprotocol } = this.options;
 
-    this.socket = new WebSocket(url, subprotocol || this.defaultSubprotocol);
+      this.socket = new WebSocket(url, subprotocol || this.defaultSubprotocol);
 
-    this.socket.binaryType = 'arraybuffer';
+      this.socket.binaryType = 'arraybuffer';
 
-    this.socket.onopen = this.onopen;
-    this.socket.onmessage = this.onmessage;
+      this.socket.onopen = resolve;
+      this.socket.onerror = reject;
+
+      this.socket.onmessage = this.onmessage;
+    });
+  }
+
+  send(packet: any) {
+    const bytes = this.encode(packet);
+    const buffer = Uint8Array.from(bytes);
+
+    this.emit('packetsend', buffer);
+
+    this.socket.send(buffer);
+  }
+
+  close() {
+    this.socket.close();
   }
 
   getWebSocketURL() {
@@ -50,15 +67,6 @@ export default class Client extends BaseClient {
     return `${protocol || 'ws'}://${host}${formatPort()}`;
   }
 
-  onopen = () => {
-    this.log('connected');
-
-    this.send({
-      type: 'connect',
-      clientId: this.clientId,
-    });
-  };
-
   onmessage = (msg: MessageEvent) => {
     if (msg.data instanceof ArrayBuffer) {
       const buffer = new Uint8Array(msg.data);
@@ -70,21 +78,6 @@ export default class Client extends BaseClient {
       this.emit(packet.type, packet);
     }
   };
-
-  send(packet: any) {
-    const bytes = this.encode(packet);
-    const buffer = Uint8Array.from(bytes);
-
-    this.emit('packetsend', buffer);
-
-    this.socket.send(buffer);
-  }
-
-  emit(event: string, data: any) {
-    if (typeof this.options[event] === 'function') {
-      this.options[event](data);
-    }
-  }
 }
 
 Client.prototype.defaultSubprotocol = 'mqtt';

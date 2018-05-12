@@ -1,6 +1,10 @@
 // @flow
 
 export default {
+  encode(_packet: any) {
+    throw new Error('connect.decode is not implemented yet');
+  },
+
   decode(buffer: Uint8Array) {
     const sessionPresent = !!(buffer[2] & 1);
     const returnCode = buffer[3];

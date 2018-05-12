@@ -17,14 +17,54 @@ export type ClientOptions = {
 export default class Client {
   options: ClientOptions;
   clientId: string;
+  connectionState: string;
 
   defaultClientIdPrefix: string;
 
   constructor(options: ClientOptions) {
     this.options = options;
-
     this.clientId = this.options.clientId || this.generateClientId();
+    this.connectionState = 'not-connected';
   }
+
+  // Connection methods
+
+  async open() {
+    throw new Error('not implemented');
+  }
+
+  async send(_packet: any) {
+    throw new Error('not implemented');
+  }
+
+  async close() {
+    throw new Error('not implemented');
+  }
+
+  // Packet methods
+
+  async connect() {
+    if (this.connectionState === 'connected') {
+      throw new Error('already connected');
+    }
+
+    await this.open();
+
+    this.connectionState = 'connected';
+
+    this.send({
+      type: 'connect',
+      clientId: this.clientId,
+    });
+  }
+
+  async disconnect() {
+    await this.send({ type: 'disconnect' });
+
+    this.connectionState = 'disconnected';
+  }
+
+  // Utility methods
 
   generateClientId() {
     const prefix = this.options.clientIdPrefix || this.defaultClientIdPrefix;
@@ -33,18 +73,6 @@ export default class Client {
       .slice(2);
 
     return `${prefix}-${suffix}`;
-  }
-
-  connect() {
-    throw new Error('not implemented');
-  }
-
-  send(_packet: any) {
-    throw new Error('not implemented');
-  }
-
-  log(...args: any[]): void {
-    log(...args);
   }
 
   encode(packet: any) {
@@ -59,6 +87,10 @@ export default class Client {
     if (typeof this.options[event] === 'function') {
       this.options[event](data);
     }
+  }
+
+  log(...args: any[]): void {
+    log(...args);
   }
 }
 
