@@ -25,7 +25,7 @@ export function encodeUTF8String(str: string) {
 }
 
 // https://stackoverflow.com/a/18729931
-function toUTF8Array(str) {
+export function toUTF8Array(str: string) {
   var utf8 = [];
   for (var i = 0; i < str.length; i++) {
     var charcode = str.charCodeAt(i);

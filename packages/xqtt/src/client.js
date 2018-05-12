@@ -14,10 +14,19 @@ export type ClientOptions = {
   connack?: (packet: any) => void,
 };
 
+export type PublishOptions = {
+  dup?: boolean,
+  qos?: number,
+  retain?: boolean,
+};
+
+const packetIdLimit = 65536;
+
 export default class Client {
   options: ClientOptions;
   clientId: string;
   connectionState: string;
+  lastPacketId: number;
 
   defaultClientIdPrefix: string;
 
@@ -25,6 +34,7 @@ export default class Client {
     this.options = options;
     this.clientId = this.options.clientId || this.generateClientId();
     this.connectionState = 'not-connected';
+    this.lastPacketId = Math.floor(Math.random() * packetIdLimit);
   }
 
   // Connection methods
@@ -55,6 +65,20 @@ export default class Client {
     this.send({
       type: 'connect',
       clientId: this.clientId,
+    });
+  }
+
+  publish(topic: string, payload: any, options: ?PublishOptions) {
+    this.lastPacketId = (this.lastPacketId + 1) % packetIdLimit;
+
+    this.send({
+      type: 'publish',
+      dup: (options && options.dup) || false,
+      qos: (options && options.qos) || 0,
+      retain: (options && options.retain) || false,
+      id: this.lastPacketId,
+      topic,
+      payload,
     });
   }
 

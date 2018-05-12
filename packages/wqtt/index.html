@@ -12,6 +12,11 @@
     <button onclick="connect()">connect</button>
     <button onclick="disconnect()">disconnect</button>
   </div>
+  <div>
+    <input id="topic" value="topic/name">
+    <input id="payload" value="payload">
+    <button onclick="publish()">publish</button>
+  </div>
   <ul id="events">
   </ul>
 
@@ -38,6 +43,10 @@ function connect() {
 
 function disconnect() {
   client.disconnect();
+}
+
+function publish() {
+  client.publish(document.all.topic.value, document.all.payload.value);
 }
 
 function logEvent(type, msg) {

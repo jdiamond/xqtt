@@ -2,11 +2,13 @@
 
 import connect from './connect';
 import connack from './connack';
+import publish from './publish';
 import disconnect from './disconnect';
 
 const packetTypesByName = {
   connect,
   connack,
+  publish,
   disconnect,
 };
 
@@ -14,7 +16,7 @@ const packetTypesById = [
   null,
   connect,
   connack,
-  null,
+  publish,
   null,
   null,
   null,
