@@ -1,0 +1,45 @@
+{
+  "name": "xqtt",
+  "version": "1.0.0",
+  "description": "mqtt client",
+  "main": "lib/index.js",
+  "author": "Jason Diamond",
+  "license": "MIT",
+  "repository": "https://github.com/jdiamond/xqtt",
+  "keywords": ["mqtt"],
+  "dependencies": {},
+  "devDependencies": {
+    "babel-cli": "6.26.0",
+    "babel-core": "6.26.3",
+    "babel-eslint": "8.2.3",
+    "babel-jest": "22.4.3",
+    "babel-loader": "7.1.4",
+    "babel-plugin-transform-class-properties": "6.24.1",
+    "babel-preset-env": "1.7.0",
+    "babel-preset-flow": "6.23.0",
+    "eslint": "4.19.1",
+    "eslint-plugin-flowtype": "2.46.3",
+    "flow-bin": "0.72.0",
+    "flow-typed": "2.4.0",
+    "jest": "22.4.3"
+  },
+  "scripts": {
+    "babel": "babel src/ -d lib",
+    "build": "npm run babel",
+    "eslint": "eslint src",
+    "flow": "flow",
+    "install": "flow-typed install",
+    "jest": "jest",
+    "prepare": "npm run build",
+    "test": "npm run eslint && npm run flow && npm run jest",
+    "watch:babel": "npm run babel -- --watch",
+    "watch:test": "npm run jest -- --watch"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "<rootDir>/flow-typed/",
+      "<rootDir>/lib/",
+      "<rootDir>/node_modules/"
+    ]
+  }
+}

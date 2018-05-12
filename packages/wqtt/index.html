@@ -14,10 +14,10 @@ var client = new wqtt.Client({
   host: 'localhost',
   port: 8080,
   packetsend(buffer) {
-    console.log('sent', buffer);
+    console.log('packetsend', buffer);
   },
   packetreceive(buffer) {
-    console.log('received', buffer);
+    console.log('packetreceive', buffer);
   },
   connack(packet) {
     console.log('connack', packet);

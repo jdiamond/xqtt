@@ -2,7 +2,7 @@
 
 /* eslint-env jest */
 
-import { encode } from './packet';
+import { encode } from './index';
 
 describe('packet', () => {
   describe('connect', () => {
