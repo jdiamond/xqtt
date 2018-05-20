@@ -47,6 +47,7 @@ export default class Client {
   rejectConnect: any;
 
   defaultClientIdPrefix: string;
+  log: (...data: any[]) => void;
 
   constructor(options: ClientOptions) {
     this.options = options;
@@ -280,10 +281,7 @@ export default class Client {
       this.options[event](data);
     }
   }
-
-  log(...args: any[]): void {
-    log(...args);
-  }
 }
 
 Client.prototype.defaultClientIdPrefix = 'xqtt';
+Client.prototype.log = log;
