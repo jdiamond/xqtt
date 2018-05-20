@@ -2,7 +2,7 @@
 
 export default {
   encode(_packet: any) {
-    throw new Error('connect.decode is not implemented yet');
+    throw new Error('connack.encode is not implemented yet');
   },
 
   decode(buffer: Uint8Array) {

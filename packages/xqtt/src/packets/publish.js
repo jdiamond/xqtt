@@ -2,8 +2,17 @@
 
 import { encodeLength, encodeUTF8String, toUTF8Array } from './helpers';
 
+type PublishPacket = {
+  id: number,
+  topic: string,
+  payload: any,
+  dup: boolean,
+  qos: 0 | 1 | 2,
+  retain: boolean,
+};
+
 export default {
-  encode(packet: any) {
+  encode(packet: PublishPacket) {
     const packetType = 3;
     const flags =
       (packet.dup ? 8 : 0) +
@@ -32,6 +41,6 @@ export default {
   },
 
   decode(_buffer: Uint8Array) {
-    throw new Error('connect.decode is not implemented yet');
+    throw new Error('publish.decode is not implemented yet');
   },
 };

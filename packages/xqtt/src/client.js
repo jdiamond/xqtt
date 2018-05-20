@@ -20,56 +20,162 @@ export type PublishOptions = {
   retain?: boolean,
 };
 
-const packetIdLimit = 65536;
+type ConnectionStates =
+  | 'never-connected'
+  | 'connecting'
+  | 'connect-failed-retrying'
+  | 'connect-failed'
+  | 'connected'
+  | 'offline'
+  | 'offline-reconnecting'
+  | 'reconnecting'
+  | 'reconnect-failed-retrying'
+  | 'reconnect-failed'
+  | 'disconnecting'
+  | 'disconnected';
+
+const packetIdLimit = 2 ** 16;
 
 export default class Client {
   options: ClientOptions;
   clientId: string;
-  connectionState: string;
+  connectionState: ConnectionStates;
   lastPacketId: number;
+  resolveConnect: any;
+  rejectConnect: any;
 
   defaultClientIdPrefix: string;
 
   constructor(options: ClientOptions) {
     this.options = options;
     this.clientId = this.options.clientId || this.generateClientId();
-    this.connectionState = 'not-connected';
-    this.lastPacketId = Math.floor(Math.random() * packetIdLimit);
+    this.connectionState = 'never-connected';
+    this.lastPacketId = 0;
   }
 
-  // Connection methods
+  // Connection methods implemented by subclasses, consider abtstract and protected
 
-  async open() {
+  open() {
     throw new Error('not implemented');
   }
 
-  async send(_packet: any) {
+  write(_bytes: Uint8Array) {
     throw new Error('not implemented');
   }
 
-  async close() {
+  close() {
     throw new Error('not implemented');
   }
 
-  // Packet methods
+  // Connection methods invoked by subclasses, consider protected
 
-  async connect() {
-    if (this.connectionState === 'connected') {
-      throw new Error('already connected');
-    }
-
-    await this.open();
-
-    this.connectionState = 'connected';
-
+  connectionOpened() {
     this.send({
       type: 'connect',
       clientId: this.clientId,
     });
   }
 
+  connectionClosed() {
+    switch (this.connectionState) {
+      case 'disconnecting':
+        this.changeState('disconnected');
+        break;
+      default:
+        this.log(`connection should not be closing in ${this.connectionState} state`);
+        return;
+    }
+  }
+
+  connectionError(error: any) {
+    this.log(error);
+  }
+
+  bytesReceived(buffer: Uint8Array) {
+    // This is assuming all the bytes for a complete message are available.
+    // We can't rely on that.
+    const packet = this.decode(buffer);
+
+    this.packetReceived(packet);
+  }
+
+  packetReceived(packet: any) {
+    this.emit('packetreceive', packet);
+
+    switch (packet.type) {
+      case 'connack':
+        this.handleConnack();
+        break;
+    }
+
+    this.emit(packet.type, packet);
+  }
+
+  handleConnack() {
+    switch (this.connectionState) {
+      case 'connecting':
+      case 'reconnecting':
+        break;
+      default:
+        this.log(`should not be receiving connack packets in ${this.connectionState} state`);
+        return;
+    }
+
+    this.changeState('connected');
+
+    if (this.resolveConnect) {
+      this.resolveConnect(this);
+    }
+  }
+
+  // Public methods
+
+  send(packet: any) {
+    this.emit('packetsend', packet);
+
+    const bytes = this.encode(packet);
+
+    this.write(bytes);
+  }
+
+  async connect() {
+    switch (this.connectionState) {
+      case 'never-connected':
+      case 'connect-failed':
+      case 'reconnect-failed':
+      case 'offline':
+      case 'disconnected':
+        break;
+      default:
+        this.log(`should not be connecting in ${this.connectionState} state`);
+        return;
+    }
+
+    this.changeState('connecting');
+
+    return new Promise((resolve, reject) => {
+      this.resolveConnect = resolve;
+      this.rejectConnect = reject;
+
+      this.open();
+    });
+  }
+
   publish(topic: string, payload: any, options: ?PublishOptions) {
+    switch (this.connectionState) {
+      case 'connected':
+        break;
+      default:
+        this.log(`should not be publishing in ${this.connectionState} state`);
+        return;
+    }
+
     this.lastPacketId = (this.lastPacketId + 1) % packetIdLimit;
+
+    // Don't allow packet
+    if (!this.lastPacketId) {
+      this.lastPacketId = 1;
+    }
 
     this.send({
       type: 'publish',
@@ -83,12 +189,30 @@ export default class Client {
   }
 
   async disconnect() {
-    await this.send({ type: 'disconnect' });
+    switch (this.connectionState) {
+      case 'connected':
+        break;
+      default:
+        this.log(`should not be disconnecting in ${this.connectionState} state`);
+        return;
+    }
 
-    this.connectionState = 'disconnected';
+    this.changeState('disconnecting');
+
+    this.send({ type: 'disconnect' });
   }
 
   // Utility methods
+
+  changeState(newState: ConnectionStates) {
+    const oldState = this.connectionState;
+
+    this.connectionState = newState;
+
+    this.emit('statechange', { from: oldState, to: newState });
+
+    this.emit(newState);
+  }
 
   generateClientId() {
     const prefix = this.options.clientIdPrefix || this.defaultClientIdPrefix;

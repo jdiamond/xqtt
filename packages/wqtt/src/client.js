@@ -18,27 +18,22 @@ export default class Client extends BaseClient {
   }
 
   open() {
-    return new Promise((resolve, reject) => {
-      const url = this.getWebSocketURL();
+    const url = this.getWebSocketURL();
 
-      const { subprotocol } = this.options;
+    const { subprotocol } = this.options;
 
-      this.socket = new WebSocket(url, subprotocol || this.defaultSubprotocol);
+    this.socket = new WebSocket(url, subprotocol || this.defaultSubprotocol);
 
-      this.socket.binaryType = 'arraybuffer';
+    this.socket.binaryType = 'arraybuffer';
 
-      this.socket.onopen = resolve;
-      this.socket.onerror = reject;
-
-      this.socket.onmessage = this.onmessage;
-    });
+    this.socket.addEventListener('open', this.handleOpenEvent);
+    this.socket.addEventListener('close', this.handleCloseEvent);
+    this.socket.addEventListener('error', this.handleErrorEvent);
+    this.socket.addEventListener('message', this.handleMessageEvent);
   }
 
-  send(packet: any) {
-    const bytes = this.encode(packet);
+  write(bytes: any) {
     const buffer = Uint8Array.from(bytes);
-
-    this.emit('packetsend', buffer);
 
     this.socket.send(buffer);
   }
@@ -56,7 +51,7 @@ export default class Client extends BaseClient {
         return '';
       }
 
-      // If the protocol is `wss`, the default protocol is 443.
+      // If the protocol is `wss`, the default port is 443.
       if (protocol === 'wss' && port === 443) {
         return '';
       }
@@ -67,15 +62,27 @@ export default class Client extends BaseClient {
     return `${protocol || 'ws'}://${host}${formatPort()}`;
   }
 
-  onmessage = (msg: MessageEvent) => {
+  handleOpenEvent = () => {
+    this.connectionOpened();
+  };
+
+  handleCloseEvent = () => {
+    this.connectionClosed();
+  };
+
+  handleErrorEvent = (e: Event) => {
+    this.log(e);
+
+    this.connectionError();
+  };
+
+  handleMessageEvent = (e: Event) => {
+    const msg = ((e: any): MessageEvent);
+
     if (msg.data instanceof ArrayBuffer) {
       const buffer = new Uint8Array(msg.data);
 
-      this.emit('packetreceive', buffer);
-
-      const packet = this.decode(buffer);
-
-      this.emit(packet.type, packet);
+      this.bytesReceived(buffer);
     }
   };
 }

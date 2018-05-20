@@ -15,6 +15,7 @@
   <div>
     <input id="topic" value="topic/name">
     <input id="payload" value="payload">
+    <input id="publishQoS" value="0" type="number">
     <button onclick="publish()">publish</button>
   </div>
   <ul id="events">
@@ -26,14 +27,14 @@
 const client = new wqtt.Client({
   host: 'localhost',
   port: 8080,
-  packetsend(buffer) {
-    logEvent('packetsend', buffer);
+  packetsend(packet) {
+    logEvent('packetsend', JSON.stringify(packet));
   },
-  packetreceive(buffer) {
-    logEvent('packetreceive', buffer);
+  packetreceive(packet) {
+    logEvent('packetreceive', JSON.stringify(packet));
   },
-  connack(packet) {
-    logEvent('connack', JSON.stringify(packet));
+  statechange(transition) {
+    logEvent('statechange', `${transition.from} -> ${transition.to}`);
   },
 });
 
@@ -46,7 +47,9 @@ function disconnect() {
 }
 
 function publish() {
-  client.publish(document.all.topic.value, document.all.payload.value);
+  client.publish(document.all.topic.value, document.all.payload.value, {
+    qos: document.all.publishQoS.value,
+  });
 }
 
 function logEvent(type, msg) {

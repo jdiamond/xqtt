@@ -3,21 +3,23 @@
 import connect from './connect';
 import connack from './connack';
 import publish from './publish';
+import puback from './puback';
 import disconnect from './disconnect';
 
 const packetTypesByName = {
   connect,
   connack,
   publish,
+  puback,
   disconnect,
 };
 
 const packetTypesById = [
   null,
-  connect,
-  connack,
-  publish,
-  null,
+  connect, // 1
+  connack, // 2
+  publish, // 3
+  puback, // 4
   null,
   null,
   null,

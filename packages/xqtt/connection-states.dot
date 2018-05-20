@@ -1,0 +1,26 @@
+digraph {
+    "connect-failed" [peripheries=2]
+    "reconnect-failed" [peripheries=2]
+    "offline" [peripheries=2]
+    "disconnected" [peripheries=2]
+
+    "never-connected" -> connecting
+    connecting -> "connect-failed"
+    connecting -> "connect-failed-retrying"
+    "connect-failed-retrying" -> connecting
+    connecting -> connected
+    connected -> "offline-reconnecting"
+    connected -> disconnecting
+    "offline-reconnecting" -> reconnecting
+    reconnecting -> "reconnect-failed"
+    reconnecting -> "reconnect-failed-retrying"
+    "reconnect-failed-retrying" -> reconnecting
+    reconnecting -> connected
+    connected -> offline
+    disconnecting -> disconnected
+
+    # offline -> connecting
+    # "connect-failed" -> connecting
+    # "reconnect-failed" -> connecting
+    # disconnected -> connecting
+}
