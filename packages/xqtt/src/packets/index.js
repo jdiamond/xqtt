@@ -6,6 +6,8 @@ import publish from './publish';
 import puback from './puback';
 import subscribe from './subscribe';
 import suback from './suback';
+import unsubscribe from './unsubscribe';
+import unsuback from './unsuback';
 import disconnect from './disconnect';
 
 import type { ConnectPacket } from './connect';
@@ -14,6 +16,8 @@ import type { PublishPacket } from './publish';
 import type { PubackPacket } from './puback';
 import type { SubscribePacket } from './subscribe';
 import type { SubackPacket } from './suback';
+import type { UnsubscribePacket } from './unsubscribe';
+import type { UnsubackPacket } from './unsuback';
 import type { DisconnectPacket } from './disconnect';
 
 export type PacketTypes =
@@ -23,7 +27,21 @@ export type PacketTypes =
   | PubackPacket
   | SubscribePacket
   | SubackPacket
+  | UnsubscribePacket
+  | UnsubackPacket
   | DisconnectPacket;
+
+const packetTypesByName = {
+  connect,
+  connack,
+  publish,
+  puback,
+  subscribe,
+  suback,
+  unsubscribe,
+  unsuback,
+  disconnect,
+};
 
 const packetTypesById = [
   null,
@@ -36,32 +54,22 @@ const packetTypesById = [
   null,
   subscribe, // 8
   suback, // 9
-  null,
-  null,
+  unsubscribe, // 10
+  unsuback, // 11
   null,
   null,
   disconnect,
 ];
 
 export function encode(packet: PacketTypes) {
-  switch (packet.type) {
-    case 'connect':
-      return connect.encode(packet);
-    case 'connack':
-      return connack.encode(packet);
-    case 'publish':
-      return publish.encode(packet);
-    case 'puback':
-      return puback.encode(packet);
-    case 'subscribe':
-      return subscribe.encode(packet);
-    case 'suback':
-      return suback.encode(packet);
-    case 'disconnect':
-      return disconnect.encode(packet);
-    default:
-      throw new Error(`packet type ${packet.type} cannot be encoded`);
+  const name = packet.type;
+  const packetType: any = packetTypesByName[name];
+
+  if (!packetType) {
+    throw new Error(`packet type ${name} cannot be encoded`);
   }
+
+  return packetType.encode(packet);
 }
 
 export function decode(buffer: Uint8Array): PacketTypes {

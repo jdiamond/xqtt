@@ -14,14 +14,13 @@ export default {
   },
 
   decode(buffer: Uint8Array): SubackPacket {
-    const id = (buffer[2] << 8) + buffer[3];
-
     const remainingLength = decodeLength(buffer, 1);
-    const payloadStart = buffer.length - remainingLength + 2;
-
+    const idStart = buffer.length - remainingLength;
+    const id = (buffer[idStart] << 8) + buffer[idStart + 1];
+    const payloadStart = idStart + 2;
     const returnCodes = [];
 
-    for (let i = payloadStart; i < remainingLength; i++) {
+    for (let i = payloadStart; i < buffer.length; i++) {
       returnCodes.push(buffer[i]);
     }
 

@@ -128,6 +128,9 @@ export default class Client {
       case 'suback':
         // TODO: mark inflight subscription request as ack'ed
         break;
+      case 'unsuback':
+        // TODO: mark inflight unsubscription request as ack'ed
+        break;
     }
 
     this.emit(packet.type, packet);
@@ -143,9 +146,11 @@ export default class Client {
         return;
     }
 
+    const wasConnecting = this.connectionState === 'connecting';
+
     this.changeState('connected');
 
-    if (this.resolveConnect) {
+    if (wasConnecting && this.resolveConnect) {
       this.resolveConnect(this);
     }
   }
@@ -211,6 +216,22 @@ export default class Client {
       type: 'subscribe',
       id: this.nextPacketId(),
       subscriptions: [{ topic, qos: qos || 0 }],
+    });
+  }
+
+  unsubscribe(topic: string) {
+    switch (this.connectionState) {
+      case 'connected':
+        break;
+      default:
+        this.log(`should not be unsubscribing in ${this.connectionState} state`);
+        return;
+    }
+
+    this.send({
+      type: 'unsubscribe',
+      id: this.nextPacketId(),
+      topics: [topic],
     });
   }
 

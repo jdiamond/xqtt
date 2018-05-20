@@ -16,6 +16,7 @@
     <input id="subscribeTopic" value="topic/name">
     <input id="subscribeQoS" value="0" type="number">
     <button onclick="subscribe()">subscribe</button>
+    <button onclick="unsubscribe()">unsubscribe</button>
   </div>
   <div>
     <input id="topic" value="topic/name">
@@ -52,12 +53,16 @@ function disconnect() {
 }
 
 function subscribe() {
-  client.subscribe(document.all.subscribeTopic.value, document.all.subscribeQoS.value);
+  client.subscribe(document.all.subscribeTopic.value, +document.all.subscribeQoS.value);
+}
+
+function unsubscribe() {
+  client.unsubscribe(document.all.subscribeTopic.value);
 }
 
 function publish() {
   client.publish(document.all.topic.value, document.all.payload.value, {
-    qos: document.all.publishQoS.value,
+    qos: +document.all.publishQoS.value,
   });
 }
 

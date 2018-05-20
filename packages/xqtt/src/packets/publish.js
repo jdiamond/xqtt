@@ -22,13 +22,10 @@ export default {
   encode(packet: PublishPacket) {
     const packetType = 3;
 
-    const qos = packet.qos || 0;
+    const qos = +packet.qos || 0;
 
     const flags =
-      (packet.dup ? 8 : 0) +
-      (qos & 2 ? 4 : 0) +
-      (qos & 1 ? 2 : 0) +
-      (packet.retain ? 1 : 0);
+      (packet.dup ? 8 : 0) + (qos & 2 ? 4 : 0) + (qos & 1 ? 2 : 0) + (packet.retain ? 1 : 0);
 
     const variableHeader = [...encodeUTF8String(packet.topic)];
 
