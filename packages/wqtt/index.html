@@ -9,6 +9,9 @@
 </head>
 <body>
   <div>
+    <input id="host" value="localhost">
+    <input id="port" value="8080" type="number">
+    <input id="keepAlive" value="45" type="number">
     <button onclick="connect()">connect</button>
     <button onclick="disconnect()">disconnect</button>
   </div>
@@ -28,32 +31,41 @@
   </ul>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js"></script>
-<script src="dist/wqtt.js"></script>
+<script src="wqtt.js"></script>
 <script>
-const client = new wqtt.Client({
-  host: 'localhost',
-  port: 8080,
-  packetsend(packet) {
-    logEvent('packetsend', JSON.stringify(packet));
-  },
-  packetreceive(packet) {
-    logEvent('packetreceive', JSON.stringify(packet));
-  },
-  statechange(transition) {
-    logEvent('statechange', `${transition.from} -> ${transition.to}`);
-  },
-});
+let client = null;
 
 function connect() {
+  if (client) {
+    client.disconnect();
+  }
+
+  client = new wqtt.Client({
+    host: document.all.host.value,
+    port: document.all.port.valueAsNumber,
+    keepAlive: document.all.keepAlive.valueAsNumber,
+    packetsend(packet) {
+      logEvent('packetsend', JSON.stringify(packet));
+    },
+    packetreceive(packet) {
+      logEvent('packetreceive', JSON.stringify(packet));
+    },
+    statechange(transition) {
+      logEvent('statechange', `${transition.from} -> ${transition.to}`);
+    },
+  });
+
   client.connect();
 }
 
 function disconnect() {
   client.disconnect();
+
+  client = null;
 }
 
 function subscribe() {
-  client.subscribe(document.all.subscribeTopic.value, +document.all.subscribeQoS.value);
+  client.subscribe(document.all.subscribeTopic.value, document.all.subscribeQoS.valueAsNumber);
 }
 
 function unsubscribe() {
@@ -62,7 +74,7 @@ function unsubscribe() {
 
 function publish() {
   client.publish(document.all.topic.value, document.all.payload.value, {
-    qos: +document.all.publishQoS.value,
+    qos: document.all.publishQoS.valueAsNumber,
   });
 }
 

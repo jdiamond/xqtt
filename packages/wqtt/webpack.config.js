@@ -3,8 +3,10 @@
 const path = require('path');
 // const HtmlWebpackPlugin = require('html-webpack-plugin');
 // const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+// const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const config = {
+  mode: process.env.WEBPACK_SERVE ? 'development' : 'production',
   entry: './src/index.js',
   output: {
     filename: 'wqtt.js',
@@ -23,8 +25,12 @@ const config = {
     // new HtmlWebpackPlugin({
     //   title: 'wqtt',
     // }),
-    // new UglifyJSPlugin()
+    // new UglifyJSPlugin(),
+    // new BundleAnalyzerPlugin(),
   ],
+  serve: {
+    port: 8888,
+  },
 };
 
 module.exports = config;
