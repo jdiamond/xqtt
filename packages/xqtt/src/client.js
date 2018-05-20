@@ -3,6 +3,8 @@
 import log from './log';
 import { encode, decode } from './packets';
 
+import type { PacketTypes } from './packets';
+
 export type ClientOptions = {
   protocol?: string,
   host: string,
@@ -16,7 +18,7 @@ export type ClientOptions = {
 
 export type PublishOptions = {
   dup?: boolean,
-  qos?: number,
+  qos?: 0 | 1 | 2,
   retain?: boolean,
 };
 
@@ -130,14 +132,6 @@ export default class Client {
 
   // Public methods
 
-  send(packet: any) {
-    this.emit('packetsend', packet);
-
-    const bytes = this.encode(packet);
-
-    this.write(bytes);
-  }
-
   async connect() {
     switch (this.connectionState) {
       case 'never-connected':
@@ -170,21 +164,30 @@ export default class Client {
         return;
     }
 
-    this.lastPacketId = (this.lastPacketId + 1) % packetIdLimit;
-
-    // Don't allow packet
-    if (!this.lastPacketId) {
-      this.lastPacketId = 1;
-    }
-
     this.send({
       type: 'publish',
       dup: (options && options.dup) || false,
       qos: (options && options.qos) || 0,
       retain: (options && options.retain) || false,
-      id: this.lastPacketId,
+      id: this.nextPacketId(),
       topic,
       payload,
+    });
+  }
+
+  subscribe(topic: string, qos: ?(0 | 1 | 2)) {
+    switch (this.connectionState) {
+      case 'connected':
+        break;
+      default:
+        this.log(`should not be subscribing in ${this.connectionState} state`);
+        return;
+    }
+
+    this.send({
+      type: 'subscribe',
+      id: this.nextPacketId(),
+      subscriptions: [{ topic, qos: qos || 0 }],
     });
   }
 
@@ -221,6 +224,25 @@ export default class Client {
       .slice(2);
 
     return `${prefix}-${suffix}`;
+  }
+
+  nextPacketId() {
+    this.lastPacketId = (this.lastPacketId + 1) % packetIdLimit;
+
+    // Don't allow packet id to be 0.
+    if (!this.lastPacketId) {
+      this.lastPacketId = 1;
+    }
+
+    return this.lastPacketId;
+  }
+
+  send(packet: PacketTypes) {
+    this.emit('packetsend', packet);
+
+    const bytes = this.encode(packet);
+
+    this.write(bytes);
   }
 
   encode(packet: any) {

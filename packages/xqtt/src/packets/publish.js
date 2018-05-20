@@ -2,7 +2,8 @@
 
 import { encodeLength, encodeUTF8String, toUTF8Array } from './helpers';
 
-type PublishPacket = {
+export type PublishPacket = {
+  type: 'publish',
   id: number,
   topic: string,
   payload: any,

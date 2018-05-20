@@ -2,6 +2,11 @@
 
 import { encodeUTF8String, encodeLength } from './helpers';
 
+export type ConnectPacket = {
+  type: 'connect',
+  clientId: string,
+};
+
 export default {
   encode(packet: any) {
     const packetType = 1;

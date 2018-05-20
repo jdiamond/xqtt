@@ -1,5 +1,9 @@
 // @flow
 
+export type DisconnectPacket = {
+  type: 'disconnect',
+};
+
 export default {
   encode(_packet: any) {
     const packetType = 14;

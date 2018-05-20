@@ -18,6 +18,27 @@ export function encodeLength(x: number) {
   return output;
 }
 
+export function decodeLength(buffer: Uint8Array, startIndex: number) {
+  let i = startIndex;
+  let encodedByte = 0;
+  let value = 0;
+  let multiplier = 1;
+
+  do {
+    encodedByte = buffer[i++];
+
+    value += (encodedByte & 127) * multiplier;
+
+    multiplier *= 128;
+
+    if (multiplier > 128 * 128 * 128) {
+      throw Error('malformed length');
+    }
+  } while ((encodedByte & 128) != 0);
+
+  return value;
+}
+
 export function encodeUTF8String(str: string) {
   const bytes = toUTF8Array(str);
 

@@ -13,6 +13,11 @@
     <button onclick="disconnect()">disconnect</button>
   </div>
   <div>
+    <input id="subscribeTopic" value="topic/name">
+    <input id="subscribeQoS" value="0" type="number">
+    <button onclick="subscribe()">subscribe</button>
+  </div>
+  <div>
     <input id="topic" value="topic/name">
     <input id="payload" value="payload">
     <input id="publishQoS" value="0" type="number">
@@ -44,6 +49,10 @@ function connect() {
 
 function disconnect() {
   client.disconnect();
+}
+
+function subscribe() {
+  client.subscribe(document.all.subscribeTopic.value, document.all.subscribeQoS.value);
 }
 
 function publish() {
