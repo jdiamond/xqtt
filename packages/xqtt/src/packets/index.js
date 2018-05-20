@@ -8,6 +8,8 @@ import subscribe from './subscribe';
 import suback from './suback';
 import unsubscribe from './unsubscribe';
 import unsuback from './unsuback';
+import pingreq from './pingreq';
+import pingres from './pingres';
 import disconnect from './disconnect';
 
 import type { ConnectPacket } from './connect';
@@ -18,6 +20,8 @@ import type { SubscribePacket } from './subscribe';
 import type { SubackPacket } from './suback';
 import type { UnsubscribePacket } from './unsubscribe';
 import type { UnsubackPacket } from './unsuback';
+import type { PingreqPacket } from './pingreq';
+import type { PingresPacket } from './pingres';
 import type { DisconnectPacket } from './disconnect';
 
 export type PacketTypes =
@@ -29,6 +33,8 @@ export type PacketTypes =
   | SubackPacket
   | UnsubscribePacket
   | UnsubackPacket
+  | PingreqPacket
+  | PingresPacket
   | DisconnectPacket;
 
 const packetTypesByName = {
@@ -40,6 +46,8 @@ const packetTypesByName = {
   suback,
   unsubscribe,
   unsuback,
+  pingreq,
+  pingres,
   disconnect,
 };
 
@@ -56,9 +64,9 @@ const packetTypesById = [
   suback, // 9
   unsubscribe, // 10
   unsuback, // 11
-  null,
-  null,
-  disconnect,
+  pingreq, // 12
+  pingres, // 13
+  disconnect, // 14
 ];
 
 export function encode(packet: PacketTypes) {

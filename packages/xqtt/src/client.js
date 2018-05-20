@@ -11,6 +11,7 @@ export type ClientOptions = {
   port?: number,
   clientId?: string,
   clientIdPrefix?: string,
+  keepAlive?: number,
   packetreceive?: (buffer: Uint8Array) => void,
   packetsend?: (buffer: Uint8Array) => void,
   connack?: (packet: any) => void,
@@ -41,118 +42,23 @@ const packetIdLimit = 2 ** 16;
 export default class Client {
   options: ClientOptions;
   clientId: string;
+  keepAlive: number;
   connectionState: ConnectionStates;
   lastPacketId: number;
+  lastPacketTime: Date;
   resolveConnect: any;
   rejectConnect: any;
 
   defaultClientIdPrefix: string;
+  defaultKeepAlive: number;
   log: (...data: any[]) => void;
 
   constructor(options: ClientOptions) {
     this.options = options;
     this.clientId = this.options.clientId || this.generateClientId();
+    this.keepAlive = this.options.keepAlive || this.defaultKeepAlive;
     this.connectionState = 'never-connected';
     this.lastPacketId = 0;
-  }
-
-  // Connection methods implemented by subclasses, consider abtstract and protected
-
-  open() {
-    throw new Error('not implemented');
-  }
-
-  write(_bytes: Uint8Array | number[]) {
-    throw new Error('not implemented');
-  }
-
-  close() {
-    throw new Error('not implemented');
-  }
-
-  // Connection methods invoked by subclasses, consider protected
-
-  connectionOpened() {
-    this.send({
-      type: 'connect',
-      clientId: this.clientId,
-    });
-  }
-
-  connectionClosed() {
-    switch (this.connectionState) {
-      case 'disconnecting':
-        this.changeState('disconnected');
-        break;
-      default:
-        this.log(`connection should not be closing in ${this.connectionState} state`);
-        return;
-    }
-  }
-
-  connectionError(error: any) {
-    this.log(error);
-  }
-
-  bytesReceived(buffer: Uint8Array) {
-    // This is assuming all the bytes for a complete message are available.
-    // We can't rely on that.
-    const packet = this.decode(buffer);
-
-    this.packetReceived(packet);
-  }
-
-  packetReceived(packet: any) {
-    this.emit('packetreceive', packet);
-
-    switch (packet.type) {
-      case 'connack':
-        this.handleConnack();
-        break;
-      case 'publish':
-        // TODO: if qos === 1, send puback
-        // TODO: if qos === 2, send pubrec
-        break;
-      case 'puback':
-        // TODO: mark inflight qos 1 message as ack'ed
-        break;
-      case 'pubrec':
-        // TODO: send pubrel
-        break;
-      case 'pubrel':
-        // TODO: send pubcomp
-        break;
-      case 'pubcomp':
-        // TODO: mark inflight qos 2 messages as complete
-        break;
-      case 'suback':
-        // TODO: mark inflight subscription request as ack'ed
-        break;
-      case 'unsuback':
-        // TODO: mark inflight unsubscription request as ack'ed
-        break;
-    }
-
-    this.emit(packet.type, packet);
-  }
-
-  handleConnack() {
-    switch (this.connectionState) {
-      case 'connecting':
-      case 'reconnecting':
-        break;
-      default:
-        this.log(`should not be receiving connack packets in ${this.connectionState} state`);
-        return;
-    }
-
-    const wasConnecting = this.connectionState === 'connecting';
-
-    this.changeState('connected');
-
-    if (wasConnecting && this.resolveConnect) {
-      this.resolveConnect(this);
-    }
   }
 
   // Public methods
@@ -249,6 +155,134 @@ export default class Client {
     this.send({ type: 'disconnect' });
   }
 
+  // Connection methods implemented by subclasses, consider abtstract and protected
+
+  open() {
+    throw new Error('not implemented');
+  }
+
+  write(_bytes: Uint8Array | number[]) {
+    throw new Error('not implemented');
+  }
+
+  close() {
+    throw new Error('not implemented');
+  }
+
+  // Connection methods invoked by subclasses, consider protected
+
+  connectionOpened() {
+    this.send({
+      type: 'connect',
+      clientId: this.clientId,
+      keepAlive: this.keepAlive,
+    });
+  }
+
+  connectionClosed() {
+    switch (this.connectionState) {
+      case 'disconnecting':
+        this.changeState('disconnected');
+        break;
+      case 'connected':
+        // TODO: start reconnecting
+        this.changeState('offline');
+        break;
+      default:
+        this.log(`connection should not be closing in ${this.connectionState} state`);
+        return;
+    }
+  }
+
+  connectionError(error: any) {
+    this.log(error);
+  }
+
+  bytesReceived(buffer: Uint8Array) {
+    // This is assuming all the bytes for a complete message are available.
+    // We can't rely on that.
+    const packet = this.decode(buffer);
+
+    this.packetReceived(packet);
+  }
+
+  packetReceived(packet: any) {
+    this.emit('packetreceive', packet);
+
+    switch (packet.type) {
+      case 'connack':
+        this.handleConnack();
+        break;
+      case 'publish':
+        // TODO: if qos === 1, send puback
+        // TODO: if qos === 2, send pubrec
+        break;
+      case 'puback':
+        // TODO: mark inflight qos 1 message as ack'ed
+        break;
+      case 'pubrec':
+        // TODO: send pubrel
+        break;
+      case 'pubrel':
+        // TODO: send pubcomp
+        break;
+      case 'pubcomp':
+        // TODO: mark inflight qos 2 messages as complete
+        break;
+      case 'suback':
+        // TODO: mark inflight subscription request as ack'ed
+        break;
+      case 'unsuback':
+        // TODO: mark inflight unsubscription request as ack'ed
+        break;
+    }
+
+    this.emit(packet.type, packet);
+  }
+
+  handleConnack() {
+    switch (this.connectionState) {
+      case 'connecting':
+      case 'reconnecting':
+        break;
+      default:
+        this.log(`should not be receiving connack packets in ${this.connectionState} state`);
+        return;
+    }
+
+    const wasConnecting = this.connectionState === 'connecting';
+
+    this.changeState('connected');
+
+    if (wasConnecting && this.resolveConnect) {
+      this.resolveConnect(this);
+    }
+
+    this.startKeepAliveTimer();
+  }
+
+  startKeepAliveTimer() {
+    const elapsed = new Date() - this.lastPacketTime;
+    const timeout = this.keepAlive * 1000 - elapsed;
+
+    setTimeout(() => this.sendKeepAlive(), timeout);
+  }
+
+  sendKeepAlive() {
+    if (this.connectionState === 'connected') {
+      const elapsed = new Date() - this.lastPacketTime;
+      const timeout = this.keepAlive * 1000;
+
+      if (elapsed >= timeout) {
+        this.send({
+          type: 'pingreq',
+        });
+      }
+
+      this.startKeepAliveTimer();
+    }
+  }
+
   // Utility methods
 
   changeState(newState: ConnectionStates) {
@@ -287,6 +321,8 @@ export default class Client {
     const bytes = this.encode(packet);
 
     this.write(bytes);
+
+    this.lastPacketTime = new Date();
   }
 
   encode(packet: PacketTypes) {
@@ -305,4 +341,5 @@ export default class Client {
 }
 
 Client.prototype.defaultClientIdPrefix = 'xqtt';
+Client.prototype.defaultKeepAlive = 45;
 Client.prototype.log = log;
