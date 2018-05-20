@@ -7,6 +7,9 @@ type ClientOptions = BaseClientOptions & {
   subprotocol?: string,
 };
 
+// ms to wait before checking if data is still being written
+const closeTimeout = 500;
+
 export default class Client extends BaseClient {
   socket: WebSocket;
 
@@ -39,7 +42,13 @@ export default class Client extends BaseClient {
   }
 
   close() {
-    this.socket.close();
+    if (this.socket.bufferedAmount > 0) {
+      this.log(`waiting for ${this.socket.bufferedAmount} bytes to finish sending`);
+
+      setTimeout(() => this.close, closeTimeout);
+    } else {
+      this.socket.close();
+    }
   }
 
   getWebSocketURL() {

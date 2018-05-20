@@ -153,6 +153,8 @@ export default class Client {
     this.changeState('disconnecting');
 
     this.send({ type: 'disconnect' });
+
+    this.close();
   }
 
   // Connection methods implemented by subclasses, consider abtstract and protected
