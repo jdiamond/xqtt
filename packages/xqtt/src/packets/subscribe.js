@@ -34,7 +34,7 @@ export default {
     return [...fixedHeader, ...variableHeader, ...payload];
   },
 
-  decode(_buffer: Uint8Array) {
+  decode(_buffer: Uint8Array): SubscribePacket {
     throw new Error('subscribe.decode is not implemented yet');
   },
 };

@@ -42,7 +42,7 @@
     "test": "npm run eslint && npm run flow && npm run jest",
     "watch:babel": "npm run babel -- --watch",
     "watch:test": "npm run jest -- --watch",
-    "mosquitto": "mosquitto -c mosquitto.conf",
+    "mosquitto": "mosquitto -c mosquitto.conf -v",
     "example": "serve"
   },
   "jest": {

@@ -5,10 +5,18 @@ import { encodeUTF8String, encodeLength } from './helpers';
 export type ConnectPacket = {
   type: 'connect',
   clientId: string,
+  username?: string,
+  password?: string,
+  will?: {
+    retain?: boolean,
+    qos?: 0 | 1 | 2,
+  },
+  clean?: boolean,
+  keepAlive?: number,
 };
 
 export default {
-  encode(packet: any) {
+  encode(packet: ConnectPacket) {
     const packetType = 1;
     const flags = 0;
 
@@ -30,7 +38,8 @@ export default {
       (willFlag ? 4 : 0) +
       (cleanSession ? 2 : 0);
 
-    const keepAlive = typeof packet.keepAlive !== 'undefined' ? packet.keepAlive : 0;
+    const keepAlive =
+      packet.keepAlive && typeof packet.keepAlive !== 'undefined' ? packet.keepAlive : 0;
 
     const variableHeader = [
       ...protocolName,
@@ -42,11 +51,11 @@ export default {
 
     const payload = [...encodeUTF8String(packet.clientId)];
 
-    if (usernameFlag) {
+    if (packet.username) {
       payload.push(...encodeUTF8String(packet.username));
     }
 
-    if (passwordFlag) {
+    if (packet.password) {
       payload.push(...encodeUTF8String(packet.password));
     }
 
@@ -58,7 +67,7 @@ export default {
     return [...fixedHeader, ...variableHeader, ...payload];
   },
 
-  decode(_buffer: Uint8Array) {
+  decode(_buffer: Uint8Array): ConnectPacket {
     throw new Error('connect.decode is not implemented yet');
   },
 };

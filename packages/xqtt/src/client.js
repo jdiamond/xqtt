@@ -61,7 +61,7 @@ export default class Client {
     throw new Error('not implemented');
   }
 
-  write(_bytes: Uint8Array) {
+  write(_bytes: Uint8Array | number[]) {
     throw new Error('not implemented');
   }
 
@@ -107,6 +107,25 @@ export default class Client {
     switch (packet.type) {
       case 'connack':
         this.handleConnack();
+        break;
+      case 'publish':
+        // TODO: if qos === 1, send puback
+        // TODO: if qos === 2, send pubrec
+        break;
+      case 'puback':
+        // TODO: mark inflight qos 1 message as ack'ed
+        break;
+      case 'pubrec':
+        // TODO: send pubrel
+        break;
+      case 'pubrel':
+        // TODO: send pubcomp
+        break;
+      case 'pubcomp':
+        // TODO: mark inflight qos 2 messages as complete
+        break;
+      case 'suback':
+        // TODO: mark inflight subscription request as ack'ed
         break;
     }
 
@@ -164,12 +183,15 @@ export default class Client {
         return;
     }
 
+    const qos = (options && options.qos) || 0;
+    const id = qos > 0 ? this.nextPacketId() : null;
+
     this.send({
       type: 'publish',
       dup: (options && options.dup) || false,
-      qos: (options && options.qos) || 0,
+      qos,
       retain: (options && options.retain) || false,
-      id: this.nextPacketId(),
+      id,
       topic,
       payload,
     });
@@ -245,11 +267,11 @@ export default class Client {
     this.write(bytes);
   }
 
-  encode(packet: any) {
+  encode(packet: PacketTypes) {
     return encode(packet);
   }
 
-  decode(bytes: any) {
+  decode(bytes: any): PacketTypes {
     return decode(bytes);
   }
 
