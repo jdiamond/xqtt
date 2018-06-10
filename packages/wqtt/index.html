@@ -9,24 +9,39 @@
 </head>
 <body>
   <div>
+    <select id="protocol">
+      <option>ws</option>
+      <option>wss</option>
+    </select>
     <input id="host" value="localhost">
     <input id="port" value="8080" type="number">
+  </div>
+  <div>
+    <input id="username" value="" type="text" placeholder="username">
+    <input id="password" value="" type="password" placeholder="password">
+  </div>
+  <div>
     <input id="keepAlive" value="45" type="number">
+  </div>
+  <div>
     <button onclick="connect()">connect</button>
     <button onclick="disconnect()">disconnect</button>
   </div>
+  <br>
   <div>
     <input id="subscribeTopic" value="topic/name">
     <input id="subscribeQoS" value="0" type="number">
     <button onclick="subscribe()">subscribe</button>
     <button onclick="unsubscribe()">unsubscribe</button>
   </div>
+  <br>
   <div>
     <input id="topic" value="topic/name">
     <input id="payload" value="payload">
     <input id="publishQoS" value="0" type="number">
     <button onclick="publish()">publish</button>
   </div>
+  <br>
   <ul id="events">
   </ul>
 
@@ -41,8 +56,11 @@ function connect() {
   }
 
   client = new wqtt.Client({
+    protocol: document.all.protocol.value,
     host: document.all.host.value,
     port: document.all.port.valueAsNumber,
+    username: document.all.username.value,
+    password: document.all.password.value,
     keepAlive: document.all.keepAlive.valueAsNumber,
     packetsend(packet) {
       logEvent('packetsend', JSON.stringify(packet));
