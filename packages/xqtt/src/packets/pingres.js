@@ -6,7 +6,7 @@ export type PingresPacket = {
 
 export default {
   encode(_packet: PingresPacket) {
-    throw new Error('pingres.encode is not implemented yet');
+    return [0xd0, 0];
   },
 
   decode(_buffer: Uint8Array, _remainingLength: number): PingresPacket {

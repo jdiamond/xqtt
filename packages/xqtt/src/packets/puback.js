@@ -6,8 +6,11 @@ export type PubackPacket = {
 };
 
 export default {
-  encode(_packet: PubackPacket) {
-    throw new Error('puback.encode is not implemented yet');
+  encode(packet: PubackPacket) {
+    const packetType = 4;
+    const flags = 0;
+
+    return [(packetType << 4) + flags, 2, packet.id >> 8, packet.id & 0xff];
   },
 
   decode(buffer: Uint8Array, _remainingLength: number): PubackPacket {

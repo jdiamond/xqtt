@@ -9,6 +9,8 @@ describe('packets', () => {
     describe('decode', () => {
       test('too short', () => {
         expect(decode(Uint8Array.from([32]))).toBe(null);
+        expect(decode(Uint8Array.from([32, 2]))).toBe(null);
+        expect(decode(Uint8Array.from([32, 2, 0]))).toBe(null);
       });
 
       test('normal', () => {

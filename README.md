@@ -18,6 +18,8 @@ Serve the wqtt test HTML like this:
 yarn workspace wqtt run serve
 ```
 
+Your browser should open to http://localhost:8888.
+
 Start mosquitto like this:
 
 ```

@@ -13,6 +13,8 @@ export default {
   },
 
   decode(_buffer: Uint8Array, _remainingLength: number): PingreqPacket {
-    throw new Error('pingreq.decode is not implemented yet');
+    return {
+      type: 'pingreq',
+    };
   },
 };
