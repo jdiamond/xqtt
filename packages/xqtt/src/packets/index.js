@@ -1,5 +1,7 @@
 // @flow
 
+import { decodeLength } from './helpers';
+
 import connect from './connect';
 import connack from './connack';
 import publish from './publish';
@@ -80,7 +82,11 @@ export function encode(packet: PacketTypes) {
   return packetType.encode(packet);
 }
 
-export function decode(buffer: Uint8Array): PacketTypes {
+export function decode(buffer: Uint8Array): ?PacketTypes {
+  if (buffer.length < 2) {
+    return null;
+  }
+
   const id = buffer[0] >> 4;
   const packetType = packetTypesById[id];
 
@@ -88,5 +94,11 @@ export function decode(buffer: Uint8Array): PacketTypes {
     throw new Error(`packet type ${id} cannot be decoded`);
   }
 
-  return packetType.decode(buffer);
+  const { length: remainingLength, bytesUsedToEncodeLength } = decodeLength(buffer, 1);
+
+  if (buffer.length < 1 + bytesUsedToEncodeLength + remainingLength) {
+    return null;
+  }
+
+  return packetType.decode(buffer, remainingLength);
 }

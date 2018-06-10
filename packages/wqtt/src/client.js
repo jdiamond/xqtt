@@ -45,7 +45,7 @@ export default class Client extends BaseClient {
     if (this.socket.bufferedAmount > 0) {
       this.log(`waiting for ${this.socket.bufferedAmount} bytes to finish sending`);
 
-      setTimeout(() => this.close, closeTimeout);
+      setTimeout(() => this.close(), closeTimeout);
     } else {
       this.socket.close();
     }

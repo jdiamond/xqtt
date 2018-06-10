@@ -1,7 +1,5 @@
 // @flow
 
-import { decodeLength } from './helpers';
-
 export type SubackPacket = {
   type: 'suback',
   id: number,
@@ -13,8 +11,7 @@ export default {
     throw new Error('suback.encode is not implemented yet');
   },
 
-  decode(buffer: Uint8Array): SubackPacket {
-    const remainingLength = decodeLength(buffer, 1);
+  decode(buffer: Uint8Array, remainingLength: number): SubackPacket {
     const idStart = buffer.length - remainingLength;
     const id = (buffer[idStart] << 8) + buffer[idStart + 1];
     const payloadStart = idStart + 2;

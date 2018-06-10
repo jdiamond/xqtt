@@ -11,7 +11,7 @@ export default {
     throw new Error('connack.encode is not implemented yet');
   },
 
-  decode(buffer: Uint8Array): ConnackPacket {
+  decode(buffer: Uint8Array, _remainingLength: number): ConnackPacket {
     const sessionPresent = !!(buffer[2] & 1);
     const returnCode = buffer[3];
 

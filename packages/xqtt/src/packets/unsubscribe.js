@@ -29,7 +29,7 @@ export default {
     return [...fixedHeader, ...variableHeader, ...payload];
   },
 
-  decode(_buffer: Uint8Array): UnsubscribePacket {
+  decode(_buffer: Uint8Array, _remainingLength: number): UnsubscribePacket {
     throw new Error('unsubscribe.decode is not implemented yet');
   },
 };

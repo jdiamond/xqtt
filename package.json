@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build": "yarn wsrun build --stages",
-    "test": "yarn wsrun test --stages"
+    "test": "yarn wsrun test --stages",
+    "mosquitto": "mosquitto -c mosquitto.conf -v"
   }
 }

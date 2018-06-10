@@ -36,7 +36,7 @@ export function decodeLength(buffer: Uint8Array, startIndex: number) {
     }
   } while ((encodedByte & 128) != 0);
 
-  return value;
+  return { length: value, bytesUsedToEncodeLength: i - startIndex };
 }
 
 export function encodeUTF8String(str: string) {

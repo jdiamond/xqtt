@@ -4,7 +4,6 @@ import {
   encodeLength,
   encodeUTF8String,
   toUTF8Array,
-  decodeLength,
   decodeUTF8String,
 } from './helpers';
 
@@ -51,7 +50,7 @@ export default {
     return [...fixedHeader, ...variableHeader, ...payload];
   },
 
-  decode(buffer: Uint8Array): PublishPacket {
+  decode(buffer: Uint8Array, remainingLength: number): PublishPacket {
     const flags = buffer[0] & 0x0f;
 
     const dup = !!(flags & 8);
@@ -61,8 +60,6 @@ export default {
     if (qos !== 0 && qos !== 1 && qos !== 2) {
       throw new Error('invalid qos');
     }
-
-    const remainingLength = decodeLength(buffer, 1);
 
     const topicStart = buffer.length - remainingLength;
     const decodedTopic = decodeUTF8String(buffer, topicStart);

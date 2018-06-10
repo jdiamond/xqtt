@@ -67,7 +67,7 @@ export default {
     return [...fixedHeader, ...variableHeader, ...payload];
   },
 
-  decode(_buffer: Uint8Array): ConnectPacket {
+  decode(_buffer: Uint8Array, _remainingLength: number): ConnectPacket {
     throw new Error('connect.decode is not implemented yet');
   },
 };

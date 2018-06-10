@@ -7,6 +7,10 @@ import { decode } from './index';
 describe('packets', () => {
   describe('connack', () => {
     describe('decode', () => {
+      test('too short', () => {
+        expect(decode(Uint8Array.from([32]))).toBe(null);
+      });
+
       test('normal', () => {
         expect(
           decode(

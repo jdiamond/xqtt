@@ -9,7 +9,7 @@ export default {
     throw new Error('pingres.encode is not implemented yet');
   },
 
-  decode(_buffer: Uint8Array): PingresPacket {
+  decode(_buffer: Uint8Array, _remainingLength: number): PingresPacket {
     return {
       type: 'pingres',
     };

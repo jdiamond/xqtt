@@ -12,9 +12,8 @@ export type ClientOptions = {
   clientId?: string,
   clientIdPrefix?: string,
   keepAlive?: number,
-  packetreceive?: (buffer: Uint8Array) => void,
-  packetsend?: (buffer: Uint8Array) => void,
-  connack?: (packet: any) => void,
+  username?: string,
+  password?: string,
 };
 
 export type PublishOptions = {
@@ -46,6 +45,7 @@ export default class Client {
   connectionState: ConnectionStates;
   lastPacketId: number;
   lastPacketTime: Date;
+  incomingBuffer: ?Uint8Array;
   resolveConnect: any;
   rejectConnect: any;
 
@@ -178,6 +178,8 @@ export default class Client {
       type: 'connect',
       clientId: this.clientId,
       keepAlive: this.keepAlive,
+      username: this.options.username,
+      password: this.options.password,
     });
   }
 
@@ -201,11 +203,21 @@ export default class Client {
   }
 
   bytesReceived(buffer: Uint8Array) {
-    // This is assuming all the bytes for a complete message are available.
-    // We can't rely on that.
-    const packet = this.decode(buffer);
+    this.emit('bytesreceived', buffer);
 
-    this.packetReceived(packet);
+    const bytes = this.incomingBuffer
+      ? Uint8Array.from([...this.incomingBuffer, ...buffer])
+      : buffer;
+
+    const packet = this.decode(bytes);
+
+    if (packet) {
+      this.packetReceived(packet);
+
+      this.incomingBuffer = null;
+    } else {
+      this.incomingBuffer = bytes;
+    }
   }
 
   packetReceived(packet: any) {
@@ -322,6 +334,8 @@ export default class Client {
 
     const bytes = this.encode(packet);
 
+    this.emit('bytessent', bytes);
+
     this.write(bytes);
 
     this.lastPacketTime = new Date();
@@ -331,7 +345,7 @@ export default class Client {
     return encode(packet);
   }
 
-  decode(bytes: any): PacketTypes {
+  decode(bytes: any): ?PacketTypes {
     return decode(bytes);
   }
 

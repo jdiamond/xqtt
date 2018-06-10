@@ -13,15 +13,15 @@
       <option>ws</option>
       <option>wss</option>
     </select>
-    <input id="host" value="localhost">
-    <input id="port" value="8080" type="number">
+    <input id="host">
+    <input id="port" type="number">
   </div>
   <div>
-    <input id="username" value="" type="text" placeholder="username">
-    <input id="password" value="" type="password" placeholder="password">
+    <input id="username" type="text" placeholder="username">
+    <input id="password" type="password" placeholder="password">
   </div>
   <div>
-    <input id="keepAlive" value="45" type="number">
+    <input id="keepAlive" type="number">
   </div>
   <div>
     <button onclick="connect()">connect</button>
@@ -50,12 +50,59 @@
 <script>
 let client = null;
 
+function parseJSON(str) {
+  try {
+    return JSON.parse(str);
+  } catch (err) {
+    return {};
+  }
+}
+
+const config = parseJSON(localStorage.wqtt);
+
+document.all.protocol.value = config.protocol || 'ws';
+document.all.host.value = config.host || 'localhost';
+document.all.port.valueAsNumber = config.port || 8080;
+document.all.username.value = config.username || '';
+document.all.password.value = config.password || '';
+document.all.keepAlive.valueAsNumber = config.keepAlive || 60;
+
+function hexify(bytes) {
+  return Array.from(bytes)
+    .map(b => {
+      if (b < 16) {
+        return '0' + b.toString(16);
+      } else {
+        return b.toString(16);
+      }
+    })
+    .join(' ');
+}
+
+function asciify(bytes) {
+  return Array.from(bytes)
+    .map(b => {
+      if (b >= 32 && b < 128) {
+        return String.fromCharCode(b);
+      } else {
+        return '.';
+      }
+    })
+    .join('');
+}
+
+function formatBytes(bytes) {
+  const preview = bytes.slice(0, 1024);
+
+  return `${hexify(preview)} "${asciify(preview)}"`;
+}
+
 function connect() {
   if (client) {
     client.disconnect();
   }
 
-  client = new wqtt.Client({
+  const config = {
     protocol: document.all.protocol.value,
     host: document.all.host.value,
     port: document.all.port.valueAsNumber,
@@ -63,15 +110,25 @@ function connect() {
     password: document.all.password.value,
     keepAlive: document.all.keepAlive.valueAsNumber,
     packetsend(packet) {
-      logEvent('packetsend', JSON.stringify(packet));
+      logEvent('packet sent', JSON.stringify(packet));
     },
     packetreceive(packet) {
-      logEvent('packetreceive', JSON.stringify(packet));
+      logEvent('packet received', JSON.stringify(packet));
+    },
+    bytessent(bytes) {
+      logEvent('bytes sent', formatBytes(bytes));
+    },
+    bytesreceived(bytes) {
+      logEvent('bytes received', formatBytes(bytes));
     },
     statechange(transition) {
-      logEvent('statechange', `${transition.from} -> ${transition.to}`);
+      logEvent('state changed', `${transition.from} -> ${transition.to}`);
     },
-  });
+  };
+
+  localStorage.wqtt = JSON.stringify(config);
+
+  client = new wqtt.Client(config);
 
   client.connect();
 }
