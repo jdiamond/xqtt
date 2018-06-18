@@ -14,7 +14,7 @@ const config = {
     library: 'wqtt',
     libraryTarget: 'umd',
   },
-  devtool: 'inline-source-map',
+  devtool: process.env.WEBPACK_SERVE ? 'eval' : 'source-map',
   devServer: {
     contentBase: './dist',
   },
