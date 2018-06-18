@@ -1,36 +1,31 @@
 // @flow
 
-import {
-  encodeLength,
-  encodeUTF8String,
-  toUTF8Array,
-  decodeUTF8String,
-} from './helpers';
+import { encodeLength, encodeUTF8String, toUTF8Array, decodeUTF8String } from './helpers';
 
 export type PublishPacket = {
   type: 'publish',
-  id?: ?number,
   topic: string,
   payload: any,
   dup?: boolean,
-  qos?: 0 | 1 | 2,
   retain?: boolean,
+  qos?: 0 | 1 | 2,
+  id?: number,
 };
 
 export default {
   encode(packet: PublishPacket) {
     const packetType = 3;
 
-    const qos = +packet.qos || 0;
+    const qos = packet.qos || 0;
 
     const flags =
       (packet.dup ? 8 : 0) + (qos & 2 ? 4 : 0) + (qos & 1 ? 2 : 0) + (packet.retain ? 1 : 0);
 
     const variableHeader = [...encodeUTF8String(packet.topic)];
 
-    if (qos > 0) {
-      if (typeof packet.id !== 'number' || packet.id < 0 || packet.id > 2) {
-        throw new Error('qos must be 0, 1, or 2');
+    if (qos === 1 || qos === 2) {
+      if (typeof packet.id !== 'number' || packet.id < 1) {
+        throw new Error('when qos is 1 or 2, packet must have id');
       }
 
       variableHeader.push(packet.id >> 8, packet.id & 0xff);
@@ -65,7 +60,7 @@ export default {
     const decodedTopic = decodeUTF8String(buffer, topicStart);
     const topic = decodedTopic.value;
 
-    let id = null;
+    let id = 0;
     let payloadStart = topicStart + decodedTopic.length;
 
     if (qos > 0) {
@@ -80,12 +75,12 @@ export default {
 
     return {
       type: 'publish',
-      dup,
-      qos,
-      retain,
-      id,
       topic,
       payload,
+      dup,
+      retain,
+      qos,
+      id,
     };
   },
 };

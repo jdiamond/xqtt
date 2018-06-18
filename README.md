@@ -12,6 +12,12 @@ yarn workspace nqtt run babel:watch
 yarn workspace wqtt run babel:watch
 ```
 
+To run unit tests:
+
+```
+yarn workspace xqtt run jest:watch
+```
+
 Serve the wqtt test HTML like this:
 
 ```
@@ -28,4 +34,11 @@ yarn run mosquitto
 
 It assumes `mosquitto` is installed and in your `$PATH`.
 
-It will be listening on port 8080 for WebSocket connections.
+It will be listening on port 1883 for MQTT connections and port 8080 for
+WebSocket connections.
+
+To publish a message with `mosquitto_pub`:
+
+```
+mosquitto_pub -h localhost -p 1883 -t topic/name -m payload -q 0
+```

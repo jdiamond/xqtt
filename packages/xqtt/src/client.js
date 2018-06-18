@@ -3,7 +3,12 @@
 import log from './log';
 import { encode, decode } from './packets';
 
-import type { PacketTypes } from './packets';
+import type { AnyPacket } from './packets';
+import type { PublishPacket } from './packets/publish';
+import type { PubackPacket } from './packets/puback';
+import type { PubrecPacket } from './packets/pubrec';
+import type { PubrelPacket } from './packets/pubrel';
+import type { PubcompPacket } from './packets/pubcomp';
 
 export type ClientOptions = {
   protocol?: string,
@@ -96,17 +101,19 @@ export default class Client {
     }
 
     const qos = (options && options.qos) || 0;
-    const id = qos > 0 ? this.nextPacketId() : null;
+    const id = qos > 0 ? this.nextPacketId() : 0;
 
     this.send({
       type: 'publish',
       dup: (options && options.dup) || false,
-      qos,
       retain: (options && options.retain) || false,
-      id,
       topic,
       payload,
+      qos,
+      id,
     });
+
+    // TODO: if qos > 0, message needs to be ack'ed
   }
 
   subscribe(topic: string, qos: ?(0 | 1 | 2)) {
@@ -220,7 +227,7 @@ export default class Client {
     }
   }
 
-  packetReceived(packet: any) {
+  packetReceived(packet: AnyPacket) {
     this.emit('packetreceive', packet);
 
     switch (packet.type) {
@@ -228,20 +235,19 @@ export default class Client {
         this.handleConnack();
         break;
       case 'publish':
-        // TODO: if qos === 1, send puback
-        // TODO: if qos === 2, send pubrec
+        this.handlePublish(packet);
         break;
       case 'puback':
-        // TODO: mark inflight qos 1 message as ack'ed
+        this.handlePuback(packet);
         break;
       case 'pubrec':
-        // TODO: send pubrel
+        this.handlePubrec(packet);
         break;
       case 'pubrel':
-        // TODO: send pubcomp
+        this.handlePubrel(packet);
         break;
       case 'pubcomp':
-        // TODO: mark inflight qos 2 messages as complete
+        this.handlePubcomp(packet);
         break;
       case 'suback':
         // TODO: mark inflight subscription request as ack'ed
@@ -252,6 +258,10 @@ export default class Client {
     }
 
     this.emit(packet.type, packet);
+  }
+
+  protocolViolation(msg: string) {
+    this.log(msg);
   }
 
   handleConnack() {
@@ -273,6 +283,52 @@ export default class Client {
     }
 
     this.startKeepAliveTimer();
+  }
+
+  handlePublish(packet: PublishPacket) {
+    if (packet.qos === 1) {
+      if (typeof packet.id !== 'number' || packet.id < 1) {
+        return this.protocolViolation('publish packet with qos 1 is missing id');
+      }
+
+      this.send({
+        type: 'puback',
+        id: packet.id,
+      });
+    } else if (packet.qos === 2) {
+      if (typeof packet.id !== 'number' || packet.id < 1) {
+        return this.protocolViolation('publish packet with qos 2 is missing id');
+      }
+
+      this.send({
+        type: 'pubrec',
+        id: packet.id,
+      });
+    }
+  }
+
+  handlePuback(_packet: PubackPacket) {
+    // TODO: mark message as acknowledged
+  }
+
+  handlePubrec(packet: PubrecPacket) {
+    // TODO: mark message as received
+    this.send({
+      type: 'pubrel',
+      id: packet.id,
+    });
+  }
+
+  handlePubrel(packet: PubrelPacket) {
+    // TODO: mark message as released
+    this.send({
+      type: 'pubcomp',
+      id: packet.id,
+    });
+  }
+
+  handlePubcomp(_packet: PubcompPacket) {
+    // TODO: mark message as completely acknowledged
   }
 
   startKeepAliveTimer() {
@@ -329,7 +385,7 @@ export default class Client {
     return this.lastPacketId;
   }
 
-  send(packet: PacketTypes) {
+  send(packet: AnyPacket) {
     this.emit('packetsend', packet);
 
     const bytes = this.encode(packet);
@@ -341,11 +397,11 @@ export default class Client {
     this.lastPacketTime = new Date();
   }
 
-  encode(packet: PacketTypes) {
+  encode(packet: AnyPacket) {
     return encode(packet);
   }
 
-  decode(bytes: any): ?PacketTypes {
+  decode(bytes: any): ?AnyPacket {
     return decode(bytes);
   }
 

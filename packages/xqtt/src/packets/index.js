@@ -6,6 +6,9 @@ import connect from './connect';
 import connack from './connack';
 import publish from './publish';
 import puback from './puback';
+import pubrec from './pubrec';
+import pubrel from './pubrel';
+import pubcomp from './pubcomp';
 import subscribe from './subscribe';
 import suback from './suback';
 import unsubscribe from './unsubscribe';
@@ -18,6 +21,9 @@ import type { ConnectPacket } from './connect';
 import type { ConnackPacket } from './connack';
 import type { PublishPacket } from './publish';
 import type { PubackPacket } from './puback';
+import type { PubrecPacket } from './pubrec';
+import type { PubrelPacket } from './pubrel';
+import type { PubcompPacket } from './pubcomp';
 import type { SubscribePacket } from './subscribe';
 import type { SubackPacket } from './suback';
 import type { UnsubscribePacket } from './unsubscribe';
@@ -26,11 +32,14 @@ import type { PingreqPacket } from './pingreq';
 import type { PingresPacket } from './pingres';
 import type { DisconnectPacket } from './disconnect';
 
-export type PacketTypes =
+export type AnyPacket =
   | ConnectPacket
   | ConnackPacket
   | PublishPacket
   | PubackPacket
+  | PubrecPacket
+  | PubrelPacket
+  | PubcompPacket
   | SubscribePacket
   | SubackPacket
   | UnsubscribePacket
@@ -44,6 +53,9 @@ const packetTypesByName = {
   connack,
   publish,
   puback,
+  pubrec,
+  pubrel,
+  pubcomp,
   subscribe,
   suback,
   unsubscribe,
@@ -59,9 +71,9 @@ const packetTypesById = [
   connack, // 2
   publish, // 3
   puback, // 4
-  null,
-  null,
-  null,
+  pubrec, // 5
+  pubrel, // 6
+  pubcomp, // 7
   subscribe, // 8
   suback, // 9
   unsubscribe, // 10
@@ -71,7 +83,7 @@ const packetTypesById = [
   disconnect, // 14
 ];
 
-export function encode(packet: PacketTypes) {
+export function encode(packet: AnyPacket) {
   const name = packet.type;
   const packetType: any = packetTypesByName[name];
 
@@ -82,7 +94,7 @@ export function encode(packet: PacketTypes) {
   return packetType.encode(packet);
 }
 
-export function decode(buffer: Uint8Array): ?PacketTypes {
+export function decode(buffer: Uint8Array): ?AnyPacket {
   if (buffer.length < 2) {
     return null;
   }

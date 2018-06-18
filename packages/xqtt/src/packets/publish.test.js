@@ -65,7 +65,7 @@ describe('packets', () => {
           dup: false,
           qos: 0,
           retain: false,
-          id: null,
+          id: 0,
           topic: 'a/b',
           payload: Uint8Array.from([
             112, // 'p'
