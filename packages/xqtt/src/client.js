@@ -9,6 +9,8 @@ import type { PubackPacket } from './packets/puback';
 import type { PubrecPacket } from './packets/pubrec';
 import type { PubrelPacket } from './packets/pubrel';
 import type { PubcompPacket } from './packets/pubcomp';
+import type { SubackPacket } from './packets/suback';
+import type { UnsubackPacket } from './packets/unsuback';
 
 export type ClientOptions = {
   protocol?: string,
@@ -19,6 +21,22 @@ export type ClientOptions = {
   keepAlive?: number,
   username?: string,
   password?: string,
+  connectTimeout?: number,
+  reconnect?: boolean | ReconnectOptions,
+};
+
+export type ReconnectOptions = {
+  random?: boolean,
+  factor?: number,
+  minTimeout?: number,
+  maxTimeout?: number,
+};
+
+export type DefaultReconnectOptions = {
+  random: boolean,
+  factor: number,
+  minTimeout: number,
+  maxTimeout: number,
 };
 
 export type PublishOptions = {
@@ -30,14 +48,10 @@ export type PublishOptions = {
 type ConnectionStates =
   | 'never-connected'
   | 'connecting'
-  | 'connect-failed-retrying'
   | 'connect-failed'
   | 'connected'
   | 'offline'
-  | 'offline-reconnecting'
   | 'reconnecting'
-  | 'reconnect-failed-retrying'
-  | 'reconnect-failed'
   | 'disconnecting'
   | 'disconnected';
 
@@ -48,14 +62,20 @@ export default class Client {
   clientId: string;
   keepAlive: number;
   connectionState: ConnectionStates;
+  reconnectAttempt: number;
   lastPacketId: number;
   lastPacketTime: Date;
   incomingBuffer: ?Uint8Array;
   resolveConnect: any;
   rejectConnect: any;
+  connectTimer: any;
+  reconnectTimer: any;
+  keepAliveTimer: any;
 
   defaultClientIdPrefix: string;
+  defaultConnectTimeout: number;
   defaultKeepAlive: number;
+  defaultReconnectOptions: DefaultReconnectOptions;
   log: (...data: any[]) => void;
 
   constructor(options: ClientOptions) {
@@ -63,16 +83,16 @@ export default class Client {
     this.clientId = this.options.clientId || this.generateClientId();
     this.keepAlive = this.options.keepAlive || this.defaultKeepAlive;
     this.connectionState = 'never-connected';
+    this.reconnectAttempt = 0;
     this.lastPacketId = 0;
   }
 
   // Public methods
 
-  async connect() {
+  async connect(reconnecting?: boolean) {
     switch (this.connectionState) {
       case 'never-connected':
       case 'connect-failed':
-      case 'reconnect-failed':
       case 'offline':
       case 'disconnected':
         break;
@@ -81,7 +101,7 @@ export default class Client {
         return;
     }
 
-    this.changeState('connecting');
+    this.changeState(reconnecting ? 'reconnecting' : 'connecting');
 
     return new Promise((resolve, reject) => {
       this.resolveConnect = resolve;
@@ -181,6 +201,10 @@ export default class Client {
   // Connection methods invoked by subclasses, consider protected
 
   connectionOpened() {
+    this.log('connectionOpened');
+
+    this.startConnectTimer();
+
     this.send({
       type: 'connect',
       clientId: this.clientId,
@@ -191,22 +215,38 @@ export default class Client {
   }
 
   connectionClosed() {
+    this.log('connectionClosed');
+
     switch (this.connectionState) {
       case 'disconnecting':
         this.changeState('disconnected');
         break;
       case 'connected':
-        // TODO: start reconnecting
         this.changeState('offline');
+        this.reconnectAttempt = 0;
+        this.startReconnectTimer();
+        break;
+      case 'connecting':
+      case 'reconnecting':
+        if (this.connectionState === 'connecting') {
+          this.reconnectAttempt = 0;
+        } else {
+          this.reconnectAttempt++;
+        }
+
+        this.changeState('connect-failed');
+        this.startReconnectTimer();
+
         break;
       default:
         this.log(`connection should not be closing in ${this.connectionState} state`);
-        return;
+        break;
     }
   }
 
   connectionError(error: any) {
-    this.log(error);
+    // TODO: decide what to do with this
+    this.log('connectionError', error);
   }
 
   bytesReceived(buffer: Uint8Array) {
@@ -226,6 +266,8 @@ export default class Client {
       this.incomingBuffer = bytes;
     }
   }
+
+  // Methods that can be overridden by subclasses, consider protected
 
   packetReceived(packet: AnyPacket) {
     this.emit('packetreceive', packet);
@@ -250,18 +292,16 @@ export default class Client {
         this.handlePubcomp(packet);
         break;
       case 'suback':
-        // TODO: mark inflight subscription request as ack'ed
+        this.handleSuback(packet);
         break;
       case 'unsuback':
-        // TODO: mark inflight unsubscription request as ack'ed
+        this.handleUnsuback(packet);
         break;
     }
-
-    this.emit(packet.type, packet);
   }
 
   protocolViolation(msg: string) {
-    this.log(msg);
+    this.log('protocolViolation', msg);
   }
 
   handleConnack() {
@@ -331,11 +371,39 @@ export default class Client {
     // TODO: mark message as completely acknowledged
   }
 
+  handleSuback(_packet: SubackPacket) {
+    // TODO: mark subscription as acknowledged
+  }
+
+  handleUnsuback(_packet: UnsubackPacket) {
+    // TODO: mark unsubscription as acknowledged
+  }
+
+  startConnectTimer() {
+    this.connectTimer = setTimeout(() => {
+      if (this.connectionState !== 'connected') {
+        const wasConnecting = this.connectionState === 'connecting';
+
+        this.changeState('connect-failed');
+
+        if (wasConnecting) {
+          this.reconnectAttempt = 0;
+
+          this.rejectConnect(new Error('connect timed out'));
+        }
+
+        this.startReconnectTimer();
+      } else {
+        this.log('connectTimer should have been cancelled');
+      }
+    }, this.options.connectTimeout || this.defaultConnectTimeout);
+  }
+
   startKeepAliveTimer() {
     const elapsed = new Date() - this.lastPacketTime;
     const timeout = this.keepAlive * 1000 - elapsed;
 
-    setTimeout(() => this.sendKeepAlive(), timeout);
+    this.keepAliveTimer = setTimeout(() => this.sendKeepAlive(), timeout);
   }
 
   sendKeepAlive() {
@@ -350,7 +418,37 @@ export default class Client {
       }
 
       this.startKeepAliveTimer();
+    } else {
+      this.log('keepAliveTimer should have been cancelled');
     }
+  }
+
+  startReconnectTimer() {
+    const options = this.options;
+
+    if (options.reconnect === false) {
+      return;
+    }
+
+    const defaultReconnectOptions = this.defaultReconnectOptions;
+
+    const reconnectOptions =
+      typeof options.reconnect === 'object' ? options.reconnect : defaultReconnectOptions;
+
+    // https://github.com/tim-kos/node-retry
+    // https://dthain.blogspot.com/2009/02/exponential-backoff-in-distributed.html
+    const random = 1 + (reconnectOptions.random ? Math.random() : 0);
+    const factor = reconnectOptions.factor || defaultReconnectOptions.factor;
+    const minTimeout = reconnectOptions.minTimeout || defaultReconnectOptions.minTimeout;
+    const maxTimeout = reconnectOptions.maxTimeout || defaultReconnectOptions.maxTimeout;
+    const attempt = this.reconnectAttempt;
+    const delay = Math.min(random * minTimeout * Math.pow(factor, attempt), maxTimeout);
+
+    this.log(`reconnecting in ${delay}ms`);
+
+    this.reconnectTimer = setTimeout(() => {
+      this.connect(true);
+    }, delay);
   }
 
   // Utility methods
@@ -413,5 +511,12 @@ export default class Client {
 }
 
 Client.prototype.defaultClientIdPrefix = 'xqtt';
+Client.prototype.defaultConnectTimeout = 30 * 1000;
 Client.prototype.defaultKeepAlive = 45;
+Client.prototype.defaultReconnectOptions = {
+  random: true,
+  factor: 2,
+  minTimeout: 1000,
+  maxTimeout: Infinity,
+};
 Client.prototype.log = log;

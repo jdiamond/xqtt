@@ -80,9 +80,7 @@ export default class Client extends BaseClient {
   };
 
   handleErrorEvent = (e: Event) => {
-    this.log(e);
-
-    this.connectionError();
+    this.connectionError(e);
   };
 
   handleMessageEvent = (e: Event) => {
