@@ -2,10 +2,28 @@
 
 /* eslint-env jest */
 
-import { decode } from './index';
+import { encode, decode } from './index';
 
 describe('packets', () => {
   describe('connack', () => {
+    describe('encode', () => {
+      test('normal', () => {
+        expect(
+          encode({
+            type: 'connack',
+            sessionPresent: false,
+            returnCode: 0,
+          })
+        ).toEqual([
+          // fixedHeader
+          32, // packetType + flags
+          2, // remainingLength
+          // variableHeader
+          0, // connack flags
+          0, // return code
+        ]);
+      });
+    });
     describe('decode', () => {
       test('too short', () => {
         expect(decode(Uint8Array.from([32]))).toBe(null);

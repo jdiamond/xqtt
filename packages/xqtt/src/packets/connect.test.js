@@ -2,7 +2,7 @@
 
 /* eslint-env jest */
 
-import { encode } from './index';
+import { encode, decode } from './index';
 
 describe('packets', () => {
   describe('connect', () => {
@@ -143,6 +143,61 @@ describe('packets', () => {
           115, // 's'
           115, // 's'
         ]);
+      });
+    });
+
+    describe('decode', () => {
+      test('username and password', () => {
+        expect(
+          decode(
+            Uint8Array.from([
+              // fixedHeader
+              16, // packetType + flags
+              26, // remainingLength
+              // variableHeader
+              0, // protocolNameLength MSB
+              4, // protocolNameLength LSB
+              77, // 'M'
+              81, // 'Q'
+              84, // 'T'
+              84, // 'T'
+              4, // protocolLevel
+              194, // connectFlags (usernameFlag, passwordFlag, cleanSession)
+              0, // keepAlive MSB
+              0, // keepAlive LSB
+              // payload
+              // clientId
+              0, // length MSB
+              2, // length LSB
+              105, // 'i'
+              100, // 'd'
+              // username
+              0, // length MSB
+              4, // length LSB
+              117, // 'u'
+              115, // 's'
+              101, // 'e'
+              114, // 'r'
+              // password
+              0, // length MSB
+              4, // length LSB
+              112, // 'p'
+              97, // 'a'
+              115, // 's'
+              115, // 's'
+            ])
+          )
+        ).toEqual({
+          type: 'connect',
+          clientId: 'id',
+          protocolName: 'MQTT',
+          protocolLevel: 4,
+          username: 'user',
+          password: 'pass',
+          will: undefined,
+          clean: true,
+          keepAlive: 0,
+        });
       });
     });
   });

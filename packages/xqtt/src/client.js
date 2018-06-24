@@ -14,7 +14,7 @@ import type { UnsubackPacket } from './packets/unsuback';
 
 export type ClientOptions = {
   protocol?: string,
-  host: string,
+  host?: string,
   port?: number,
   clientId?: string,
   clientIdPrefix?: string,
@@ -78,8 +78,8 @@ export default class Client {
   defaultReconnectOptions: DefaultReconnectOptions;
   log: (...data: any[]) => void;
 
-  constructor(options: ClientOptions) {
-    this.options = options;
+  constructor(options: ?ClientOptions) {
+    this.options = options || {};
     this.clientId = this.options.clientId || this.generateClientId();
     this.keepAlive = this.options.keepAlive || this.defaultKeepAlive;
     this.connectionState = 'never-connected';

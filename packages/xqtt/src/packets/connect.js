@@ -1,9 +1,10 @@
 // @flow
 
-import { encodeUTF8String, encodeLength } from './helpers';
+import { encodeUTF8String, encodeLength, decodeUTF8String } from './helpers';
 
 export type ConnectPacket = {
   type: 'connect',
+  protocolName?: string,
   clientId: string,
   username?: string,
   password?: string,
@@ -67,7 +68,61 @@ export default {
     return [...fixedHeader, ...variableHeader, ...payload];
   },
 
-  decode(_buffer: Uint8Array, _remainingLength: number): ConnectPacket {
-    throw new Error('connect.decode is not implemented yet');
+  decode(buffer: Uint8Array, remainingLength: number): ConnectPacket {
+    const protocolNameStart = buffer.length - remainingLength;
+    const protocolName = decodeUTF8String(buffer, protocolNameStart);
+
+    const protocolLevelIndex = protocolNameStart + protocolName.length;
+    const protocolLevel = buffer[protocolLevelIndex];
+
+    const connectFlagsIndex = protocolLevelIndex + 1;
+    const connectFlags = buffer[connectFlagsIndex];
+    const usernameFlag = !!(connectFlags & 128);
+    const passwordFlag = !!(connectFlags & 64);
+    const willRetain = !!(connectFlags & 32);
+    const willQoS = (connectFlags & (16 + 8)) >> 3;
+    const willFlag = !!(connectFlags & 4);
+    const cleanSession = !!(connectFlags & 2);
+
+    if (willQoS !== 0 && willQoS !== 1 && willQoS !== 2) {
+      throw new Error('invalid will qos');
+    }
+
+    const keepAliveIndex = connectFlagsIndex + 1;
+    const keepAlive = (buffer[keepAliveIndex] << 8) + buffer[keepAliveIndex + 1];
+
+    const clientIdStart = keepAliveIndex + 2;
+    const clientId = decodeUTF8String(buffer, clientIdStart);
+
+    let username;
+    let password;
+
+    const usernameStart = clientIdStart + clientId.length;
+
+    if (usernameFlag) {
+      username = decodeUTF8String(buffer, usernameStart);
+    }
+
+    if (passwordFlag) {
+      const passwordStart = usernameStart + (username ? username.length : 0);
+      password = decodeUTF8String(buffer, passwordStart);
+    }
+
+    return {
+      type: 'connect',
+      protocolName: protocolName.value,
+      protocolLevel,
+      clientId: clientId.value,
+      username: username ? username.value : undefined,
+      password: password ? password.value : undefined,
+      will: willFlag
+        ? {
+            retain: willRetain,
+            qos: willQoS,
+          }
+        : undefined,
+      clean: cleanSession,
+      keepAlive,
+    };
   },
 };

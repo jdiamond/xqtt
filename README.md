@@ -1,38 +1,38 @@
-Build all projects like this:
+This project is a collection of MQTT clients.
+
+- nqtt: MQTT client library for "server-side" Node.js apps
+- wqtt: MQTT-over-WebSockets client library for "client-side" Web apps
+- xqtt: cross-platform core for nqtt and wqtt
+
+Run tests for all packages like this:
+
+```
+yarn run test
+```
+
+Build all packages like this:
 
 ```
 yarn run build
 ```
 
-While developing, automatically build on change with commands like this:
+During development, run each of these commands in their own shells:
 
 ```
 yarn workspace xqtt run babel:watch
-yarn workspace nqtt run babel:watch
-yarn workspace wqtt run babel:watch
-```
-
-To run unit tests:
-
-```
 yarn workspace xqtt run jest:watch
-```
-
-Serve the wqtt test HTML like this:
-
-```
 yarn workspace wqtt run serve
 ```
 
-Your browser should open to http://localhost:8888.
+## Testing with Mosquitto
 
-Start mosquitto like this:
+With [mosquitto] in your `$PATH`, run it like this:
+
+[mosquitto]: https://mosquitto.org/
 
 ```
 yarn run mosquitto
 ```
-
-It assumes `mosquitto` is installed and in your `$PATH`.
 
 It will be listening on port 1883 for MQTT connections and port 8080 for
 WebSocket connections.

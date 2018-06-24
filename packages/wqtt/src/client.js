@@ -4,6 +4,7 @@ import { Client as BaseClient } from 'xqtt';
 import type { ClientOptions as BaseClientOptions } from 'xqtt';
 
 type ClientOptions = BaseClientOptions & {
+  WebSocket?: (string, string) => WebSocket,
   subprotocol?: string,
 };
 
@@ -14,9 +15,8 @@ export default class Client extends BaseClient {
   socket: WebSocket;
 
   defaultSubprotocol: string;
-  defaultClientIdPrefix: string;
 
-  constructor(options: ClientOptions) {
+  constructor(options: ?ClientOptions) {
     super(options);
   }
 
@@ -25,7 +25,10 @@ export default class Client extends BaseClient {
 
     const { subprotocol } = this.options;
 
-    this.socket = new WebSocket(url, subprotocol || this.defaultSubprotocol);
+    this.socket = new (this.options.WebSocket || WebSocket)(
+      url,
+      subprotocol || this.defaultSubprotocol
+    );
 
     this.socket.binaryType = 'arraybuffer';
 
@@ -56,19 +59,19 @@ export default class Client extends BaseClient {
 
     function formatPort() {
       // The default protocol is `ws` which uses port 80.
-      if ((!protocol || protocol === 'ws') && port === 80) {
+      if ((!protocol || protocol === 'ws') && (!port || port === 80)) {
         return '';
       }
 
       // If the protocol is `wss`, the default port is 443.
-      if (protocol === 'wss' && port === 443) {
+      if (protocol === 'wss' && (!port || port === 443)) {
         return '';
       }
 
-      return `:${port}`;
+      return port ? `:${port}` : '';
     }
 
-    return `${protocol || 'ws'}://${host}${formatPort()}`;
+    return `${protocol || 'ws'}://${host || 'localhost'}${formatPort()}`;
   }
 
   handleOpenEvent = () => {

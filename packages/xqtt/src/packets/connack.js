@@ -7,8 +7,11 @@ export type ConnackPacket = {
 };
 
 export default {
-  encode(_packet: ConnackPacket) {
-    throw new Error('connack.encode is not implemented yet');
+  encode(packet: ConnackPacket) {
+    const packetType = 2;
+    const flags = 0;
+
+    return [(packetType << 4) + flags, 2, packet.sessionPresent ? 1 : 0, packet.returnCode || 0];
   },
 
   decode(buffer: Uint8Array, _remainingLength: number): ConnackPacket {

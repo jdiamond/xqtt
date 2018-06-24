@@ -26,6 +26,7 @@
     "flow-bin": "0.74.0",
     "flow-typed": "2.4.0",
     "jest": "23.1.0",
+    "mock-socket": "7.1.0",
     "webpack": "4.12.0",
     "webpack-bundle-analyzer": "2.13.1",
     "webpack-cli": "3.0.8",
