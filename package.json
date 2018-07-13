@@ -9,9 +9,11 @@
     ]
   },
   "devDependencies": {
-    "wsrun": "^2.2.0"
+    "rimraf": "2.6.2",
+    "wsrun": "2.2.0"
   },
   "scripts": {
+    "clean": "rimraf packages/*/node_modules packages/*/flow-typed",
     "build": "yarn wsrun build --stages",
     "test": "yarn wsrun test --stages",
     "mosquitto": "mosquitto -c mosquitto.conf -v"

@@ -1,14 +1,13 @@
 {
-  "name": "wqtt",
+  "name": "nqtt",
   "version": "1.0.0",
-  "description": "MQTT client for Web browsers",
+  "description": "MQTT client for Node.js",
   "main": "lib/index.js",
   "author": "Jason Diamond",
   "license": "MIT",
-  "repository": "https://github.com/jdiamond/wqtt",
+  "repository": "https://github.com/jdiamond/xqtt",
   "keywords": [
-    "mqtt",
-    "websockets"
+    "mqtt"
   ],
   "dependencies": {
     "xqtt": "1.0.0"
@@ -18,36 +17,28 @@
     "babel-core": "6.26.3",
     "babel-eslint": "8.2.3",
     "babel-jest": "23.0.1",
-    "babel-loader": "7.1.4",
+    "babel-plugin-transform-class-properties": "6.24.1",
     "babel-preset-env": "1.7.0",
     "babel-preset-flow": "6.23.0",
     "eslint": "4.19.1",
     "eslint-plugin-flowtype": "2.49.3",
     "flow-bin": "0.76.0",
     "flow-typed": "2.5.1",
-    "jest": "23.1.0",
-    "mock-socket": "7.1.0",
-    "webpack": "4.12.0",
-    "webpack-bundle-analyzer": "2.13.1",
-    "webpack-cli": "3.0.8",
-    "webpack-serve": "1.0.4"
+    "jest": "23.1.0"
   },
   "scripts": {
     "babel:watch": "npm run babel -- --watch",
     "babel": "babel src/ -d lib",
-    "build": "npm run babel && npm run webpack",
+    "build": "npm run babel",
     "eslint": "eslint src",
     "flow": "flow",
     "install": "flow-typed install",
     "jest:watch": "npm run jest -- --watch",
     "jest": "jest",
-    "serve": "webpack-serve webpack.config.js --open",
-    "test": "npm run eslint && npm run flow && npm run jest",
-    "webpack": "webpack"
+    "test": "npm run eslint && npm run flow && npm run jest"
   },
   "jest": {
     "testPathIgnorePatterns": [
-      "<rootDir>/dist/",
       "<rootDir>/flow-typed/",
       "<rootDir>/lib/",
       "<rootDir>/node_modules/"

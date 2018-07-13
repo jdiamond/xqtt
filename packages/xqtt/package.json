@@ -1,7 +1,7 @@
 {
   "name": "xqtt",
   "version": "1.0.0",
-  "description": "mqtt client",
+  "description": "Abstract MQTT client",
   "main": "lib/index.js",
   "author": "Jason Diamond",
   "license": "MIT",
@@ -15,14 +15,13 @@
     "babel-core": "6.26.3",
     "babel-eslint": "8.2.3",
     "babel-jest": "23.0.1",
-    "babel-loader": "7.1.4",
     "babel-plugin-transform-class-properties": "6.24.1",
     "babel-preset-env": "1.7.0",
     "babel-preset-flow": "6.23.0",
     "eslint": "4.19.1",
     "eslint-plugin-flowtype": "2.49.3",
-    "flow-bin": "0.74.0",
-    "flow-typed": "2.4.0",
+    "flow-bin": "0.76.0",
+    "flow-typed": "2.5.1",
     "jest": "23.1.0"
   },
   "scripts": {
@@ -34,7 +33,6 @@
     "install": "flow-typed install",
     "jest:watch": "npm run jest -- --watch",
     "jest": "jest",
-    "prepare": "npm run build",
     "test": "npm run eslint && npm run flow && npm run jest"
   },
   "jest": {

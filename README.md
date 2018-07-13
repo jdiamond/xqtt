@@ -20,7 +20,15 @@ During development, run each of these commands in their own shells:
 
 ```
 yarn workspace xqtt run babel:watch
+yarn workspace nqtt run babel:watch
 yarn workspace xqtt run jest:watch
+yarn workspace nqtt run jest:watch
+yarn workspace wqtt run jest:watch
+```
+
+To run the wqtt example "app" in a Web browser, run this:
+
+```
 yarn workspace wqtt run serve
 ```
 
