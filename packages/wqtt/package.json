@@ -18,7 +18,7 @@
     "babel-core": "6.26.3",
     "babel-eslint": "8.2.3",
     "babel-jest": "23.0.1",
-    "babel-loader": "7.1.4",
+    "babel-loader": "7.1.5",
     "babel-preset-env": "1.7.0",
     "babel-preset-flow": "6.23.0",
     "eslint": "4.19.1",
@@ -43,7 +43,7 @@
     "jest": "jest",
     "serve": "webpack-serve webpack.config.js --open",
     "test": "npm run eslint && npm run flow && npm run jest",
-    "webpack": "webpack"
+    "webpack": "webpack --display-modules"
   },
   "jest": {
     "testPathIgnorePatterns": [

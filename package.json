@@ -13,8 +13,9 @@
     "wsrun": "2.2.0"
   },
   "scripts": {
-    "clean": "rimraf packages/*/node_modules packages/*/flow-typed",
     "build": "yarn wsrun build --stages",
+    "clean:flow": "rimraf packages/*/flow-typed",
+    "clean:node_modules": "rimraf packages/*/node_modules",
     "test": "yarn wsrun test --stages",
     "mosquitto": "mosquitto -c mosquitto.conf -v"
   }

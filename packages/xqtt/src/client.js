@@ -89,7 +89,7 @@ export default class Client {
 
   // Public methods
 
-  async connect(reconnecting?: boolean) {
+  connect(reconnecting?: boolean) {
     switch (this.connectionState) {
       case 'never-connected':
       case 'connect-failed':
@@ -168,7 +168,7 @@ export default class Client {
     });
   }
 
-  async disconnect() {
+  disconnect() {
     switch (this.connectionState) {
       case 'connected':
         break;
