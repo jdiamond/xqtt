@@ -169,6 +169,21 @@ export default class Client {
   }
 
   disconnect() {
+    if (this.connectTimer) {
+      clearTimeout(this.connectTimer);
+      this.connectTimer = null;
+    }
+
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+
+    if (this.keepAliveTimer) {
+      clearTimeout(this.keepAliveTimer);
+      this.keepAliveTimer = null;
+    }
+
     switch (this.connectionState) {
       case 'connected':
         break;
@@ -201,7 +216,7 @@ export default class Client {
   // Connection methods invoked by subclasses, consider protected
 
   connectionOpened() {
-    this.log('connectionOpened');
+    // this.log('connectionOpened');
 
     this.startConnectTimer();
 
@@ -215,7 +230,7 @@ export default class Client {
   }
 
   connectionClosed() {
-    this.log('connectionClosed');
+    // this.log('connectionClosed');
 
     switch (this.connectionState) {
       case 'disconnecting':

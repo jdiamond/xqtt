@@ -16,6 +16,7 @@
     "build": "yarn wsrun build --stages",
     "clean:flow": "rimraf packages/*/flow-typed",
     "clean:node_modules": "rimraf packages/*/node_modules",
+    "flow:install": "yarn wsrun flow:install --stages",
     "test": "yarn wsrun test --stages",
     "mosquitto": "mosquitto -c mosquitto.conf -v"
   }

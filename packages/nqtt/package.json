@@ -31,8 +31,8 @@
     "babel": "babel src/ -d lib",
     "build": "npm run babel",
     "eslint": "eslint src",
+    "flow:install": "flow-typed install",
     "flow": "flow",
-    "install": "flow-typed install",
     "jest:watch": "npm run jest -- --watch",
     "jest": "jest",
     "test": "npm run eslint && npm run flow && npm run jest"
