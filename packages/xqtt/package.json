@@ -1,6 +1,6 @@
 {
   "name": "xqtt",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Abstract MQTT client",
   "main": "lib/index.js",
   "author": "Jason Diamond",

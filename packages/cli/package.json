@@ -1,6 +1,6 @@
 {
-  "name": "nqtt-cli",
-  "version": "1.0.0",
+  "name": "xqtt-cli",
+  "version": "0.0.0",
   "description": "MQTT CLI",
   "main": "lib/index.js",
   "author": "Jason Diamond",

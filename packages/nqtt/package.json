@@ -1,6 +1,6 @@
 {
   "name": "nqtt",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "MQTT client for Node.js",
   "main": "lib/index.js",
   "author": "Jason Diamond",
