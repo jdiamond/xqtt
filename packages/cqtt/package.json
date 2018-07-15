@@ -1,5 +1,5 @@
 {
-  "name": "xqtt-cli",
+  "name": "cqtt",
   "version": "0.0.0",
   "description": "MQTT CLI",
   "main": "lib/index.js",

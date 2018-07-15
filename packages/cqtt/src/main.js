@@ -13,7 +13,7 @@ async function main() {
   let commandFound = false;
 
   const argv = yargs
-    .scriptName('nqtt')
+    .scriptName('cqtt')
     .usage('$0 [options] [publish|subscribe]')
     .option('host', {
       alias: 'h',
