@@ -3,27 +3,27 @@
 import { Client } from 'nqtt';
 
 export async function connect(options) {
-  const { host, port, logger } = options;
+  const { logger } = options;
 
-  const client = new Client({
-    host,
-    port,
-    packetsend(packet) {
-      logEvent(logger, 'packet sent', JSON.stringify(packet));
-    },
-    packetreceive(packet) {
-      logEvent(logger, 'packet received', JSON.stringify(packet));
-    },
-    bytessent(bytes) {
-      logEvent(logger, 'bytes sent', formatBytes(bytes));
-    },
-    bytesreceived(bytes) {
-      logEvent(logger, 'bytes received', formatBytes(bytes));
-    },
-    statechange(transition) {
-      logEvent(logger, 'state changed', `${transition.from} -> ${transition.to}`);
-    },
-  });
+  const client = new Client(
+    Object.assign({}, options, {
+      packetsend(packet) {
+        logEvent(logger, 'packet sent', JSON.stringify(packet));
+      },
+      packetreceive(packet) {
+        logEvent(logger, 'packet received', JSON.stringify(packet));
+      },
+      bytessent(bytes) {
+        logEvent(logger, 'bytes sent', formatBytes(bytes));
+      },
+      bytesreceived(bytes) {
+        logEvent(logger, 'bytes received', formatBytes(bytes));
+      },
+      statechange(transition) {
+        logEvent(logger, 'state changed', `${transition.from} -> ${transition.to}`);
+      },
+    })
+  );
 
   await client.connect();
 

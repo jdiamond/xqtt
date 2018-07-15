@@ -1,10 +1,13 @@
 // @flow
 
 import net from 'net';
+import tls from 'tls';
 import { Client as BaseClient } from 'xqtt';
 import type { ClientOptions as BaseClientOptions } from 'xqtt';
 
-type ClientOptions = BaseClientOptions & {};
+type ClientOptions = BaseClientOptions & {
+  tls?: boolean | Object,
+};
 
 export default class Client extends BaseClient {
   socket: net.Socket;
@@ -14,12 +17,20 @@ export default class Client extends BaseClient {
   }
 
   open() {
-    const { host, port } = this.options;
+    const tlsOptions = this.options.tls;
 
-    this.socket = net.connect(
-      port,
-      host
-    );
+    if (tlsOptions) {
+      this.socket = tls.connect(
+        Object.assign({}, this.options, typeof tlsOptions === 'object' ? tlsOptions : {})
+      );
+    } else {
+      const { host, port } = this.options;
+
+      this.socket = net.connect(
+        port,
+        host
+      );
+    }
 
     this.socket.on('connect', this.handleConnectEvent);
     this.socket.on('close', this.handleCloseEvent);

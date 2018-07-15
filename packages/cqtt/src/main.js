@@ -1,8 +1,12 @@
 /* eslint-disable no-console */
 
+import fs from 'fs';
+import { promisify } from 'util';
 import yargs from 'yargs';
 import { connect } from './connect';
 import { run } from './shell';
+
+const readFile = promisify(fs.readFile);
 
 main().catch(error => {
   console.error(error);
@@ -86,11 +90,7 @@ async function main() {
       async argv => {
         commandFound = true;
 
-        const client = await connect({
-          host: argv.host,
-          port: argv.port,
-          logger: argv.debug ? console.error.bind(console) : () => null,
-        });
+        const client = await connect(await getConnectArgs(argv));
 
         await client.publish(argv.topic, argv.message);
 
@@ -123,4 +123,21 @@ async function main() {
   if (!commandFound) {
     run(argv);
   }
+}
+
+async function getConnectArgs(argv) {
+  const tls = argv.tls
+    ? {
+        ca: await readFile(argv.ca),
+      }
+    : false;
+
+  return {
+    host: argv.host,
+    port: argv.port,
+    tls,
+    username: argv.username,
+    password: argv.password,
+    logger: argv.debug ? console.error.bind(console) : () => null,
+  };
 }

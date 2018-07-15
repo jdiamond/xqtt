@@ -216,7 +216,7 @@ export default class Client {
   // Connection methods invoked by subclasses, consider protected
 
   connectionOpened() {
-    // this.log('connectionOpened');
+    this.log('connectionOpened');
 
     this.startConnectTimer();
 
@@ -230,7 +230,7 @@ export default class Client {
   }
 
   connectionClosed() {
-    // this.log('connectionClosed');
+    this.log('connectionClosed');
 
     switch (this.connectionState) {
       case 'disconnecting':
