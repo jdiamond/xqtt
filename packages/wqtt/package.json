@@ -11,7 +11,7 @@
     "websockets"
   ],
   "dependencies": {
-    "xqtt": "1.0.0"
+    "xqtt": "0.0.0"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",

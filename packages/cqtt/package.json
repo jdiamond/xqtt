@@ -10,7 +10,7 @@
     "mqtt"
   ],
   "dependencies": {
-    "nqtt": "1.0.0",
+    "nqtt": "0.0.0",
     "vorpal": "1.12.0",
     "yargs": "12.0.1"
   },
