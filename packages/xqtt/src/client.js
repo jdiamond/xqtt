@@ -341,6 +341,8 @@ export default class Client {
   }
 
   handlePublish(packet: PublishPacket) {
+    this.emit('message', packet);
+
     if (packet.qos === 1) {
       if (typeof packet.id !== 'number' || packet.id < 1) {
         return this.protocolViolation('publish packet with qos 1 is missing id');
@@ -519,8 +521,8 @@ export default class Client {
   }
 
   emit(event: string, data: any) {
-    if (typeof this.options[event] === 'function') {
-      this.options[event](data);
+    if (typeof this.options[`on${event}`] === 'function') {
+      this.options[`on${event}`](data);
     }
   }
 }

@@ -116,7 +116,18 @@ async function main() {
       },
       async argv => {
         commandFound = true;
-        console.log(argv);
+
+        const client = await connect(
+          Object.assign({}, await getConnectArgs(argv), {
+            onmessage(packet) {
+              console.log(packet);
+            },
+          })
+        );
+
+        client.subscribe(argv.topic);
+
+        // await client.disconnect();
       }
     ).argv;
 
