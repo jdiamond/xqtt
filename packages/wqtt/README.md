@@ -1,3 +1,4 @@
 # wqtt
 
-MQTT client for Web browsers. See nqtt for a Node.js client. Uses xqtt.
+MQTT-over-WebSockets client suitable for use in Web browsers. See nqtt for a
+Node.js client. Uses xqtt.
