@@ -79,7 +79,7 @@ async function main() {
         qos: {
           alias: 'q',
           type: 'number',
-          describe: 'QoS to publish with',
+          describe: 'QoS level to publish with',
           default: 0,
         },
       },
@@ -110,7 +110,7 @@ async function main() {
         qos: {
           alias: 'q',
           type: 'number',
-          describe: 'QoS to subscribe with',
+          describe: 'QoS level to subscribe with',
           default: 0,
         },
       },
