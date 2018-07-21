@@ -5,6 +5,7 @@ import type { ClientOptions as BaseClientOptions } from 'xqtt';
 
 type ClientOptions = BaseClientOptions & {
   WebSocket?: (string, string) => WebSocket,
+  protocol?: string,
   subprotocol?: string,
 };
 

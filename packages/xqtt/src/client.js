@@ -13,11 +13,9 @@ import type { SubackPacket } from './packets/suback';
 import type { UnsubackPacket } from './packets/unsuback';
 
 export type ClientOptions = {
-  protocol?: string,
   host?: string,
   port?: number,
-  clientId?: string,
-  clientIdPrefix?: string,
+  clientId?: string | Function,
   keepAlive?: number,
   username?: string,
   password?: string,
@@ -26,17 +24,19 @@ export type ClientOptions = {
 };
 
 export type ReconnectOptions = {
-  random?: boolean,
+  min?: number,
   factor?: number,
-  minTimeout?: number,
-  maxTimeout?: number,
+  random?: boolean,
+  max?: number,
+  attempts?: number,
 };
 
 export type DefaultReconnectOptions = {
-  random: boolean,
+  min: number,
   factor: number,
-  minTimeout: number,
-  maxTimeout: number,
+  random: boolean,
+  max: number,
+  attempts: number,
 };
 
 export type PublishOptions = {
@@ -80,7 +80,7 @@ export default class Client {
 
   constructor(options: ?ClientOptions) {
     this.options = options || {};
-    this.clientId = this.options.clientId || this.generateClientId();
+    this.clientId = this.generateClientId();
     this.keepAlive = this.options.keepAlive || this.defaultKeepAlive;
     this.connectionState = 'never-connected';
     this.reconnectAttempt = 0;
@@ -452,14 +452,20 @@ export default class Client {
     const reconnectOptions =
       typeof options.reconnect === 'object' ? options.reconnect : defaultReconnectOptions;
 
-    // https://github.com/tim-kos/node-retry
-    // https://dthain.blogspot.com/2009/02/exponential-backoff-in-distributed.html
-    const random = 1 + (reconnectOptions.random ? Math.random() : 0);
-    const factor = reconnectOptions.factor || defaultReconnectOptions.factor;
-    const minTimeout = reconnectOptions.minTimeout || defaultReconnectOptions.minTimeout;
-    const maxTimeout = reconnectOptions.maxTimeout || defaultReconnectOptions.maxTimeout;
     const attempt = this.reconnectAttempt;
-    const delay = Math.min(random * minTimeout * Math.pow(factor, attempt), maxTimeout);
+    const maxAttempts = reconnectOptions.attempts || defaultReconnectOptions.attempts;
+
+    if (attempt >= maxAttempts) {
+      return;
+    }
+
+    // https://dthain.blogspot.com/2009/02/exponential-backoff-in-distributed.html
+    const min = reconnectOptions.min || defaultReconnectOptions.min;
+    const factor = reconnectOptions.factor || defaultReconnectOptions.factor;
+    const random = 1 + (reconnectOptions.random ? Math.random() : 0);
+    const max = reconnectOptions.max || defaultReconnectOptions.max;
+
+    const delay = Math.min(min * Math.pow(factor, attempt) * random, max);
 
     this.log(`reconnecting in ${delay}ms`);
 
@@ -481,12 +487,24 @@ export default class Client {
   }
 
   generateClientId() {
-    const prefix = this.options.clientIdPrefix || this.defaultClientIdPrefix;
-    const suffix = Math.random()
-      .toString(36)
-      .slice(2);
+    let clientId;
 
-    return `${prefix}-${suffix}`;
+    if (typeof this.options.clientId === 'string') {
+      clientId = this.options.clientId;
+    } else if (typeof this.options.clientId === 'function') {
+      clientId = this.options.clientId();
+    }
+
+    if (!clientId) {
+      const prefix = this.defaultClientIdPrefix;
+      const suffix = Math.random()
+        .toString(36)
+        .slice(2);
+
+      clientId = `${prefix}-${suffix}`;
+    }
+
+    return clientId;
   }
 
   nextPacketId() {
@@ -531,9 +549,10 @@ Client.prototype.defaultClientIdPrefix = 'xqtt';
 Client.prototype.defaultConnectTimeout = 30 * 1000;
 Client.prototype.defaultKeepAlive = 45;
 Client.prototype.defaultReconnectOptions = {
-  random: true,
+  min: 1000,
   factor: 2,
-  minTimeout: 1000,
-  maxTimeout: Infinity,
+  random: true,
+  max: 60000,
+  attempts: Infinity,
 };
 Client.prototype.log = log;
